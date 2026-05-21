@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             OwnerUserSeeder::class,
+            MasterDataSeeder::class,
         ]);
     }
 }
