@@ -4,6 +4,7 @@ namespace App\Livewire\Products;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductPrice;
 use App\Models\Unit;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -37,6 +38,11 @@ class ProductIndex extends Component
     public int|string|null $minimum_stock = null;
 
     public bool $is_active = true;
+
+    public bool $showBulkPriceModal = false;
+    public ?int $bulkProductId = null;
+    public string $bulkProductName = '';
+    public array $bulkPrices = [];
 
     protected function rules(): array
     {
@@ -176,6 +182,84 @@ class ProductIndex extends Component
         $product->delete();
 
         Session::flash('success', 'Produk berhasil dihapus.');
+    }
+
+    public function openBulkPrices(int $id): void
+    {
+        $product = Product::query()
+            ->with('prices')
+            ->findOrFail($id);
+
+        $this->bulkProductId = $product->id;
+        $this->bulkProductName = $product->name;
+
+        $this->bulkPrices = $product->prices
+            ->sortBy('min_qty')
+            ->map(function ($price) {
+                return [
+                    'id' => $price->id,
+                    'min_qty' => $price->min_qty,
+                    'max_qty' => $price->max_qty,
+                    'price' => (int) $price->price,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        if (count($this->bulkPrices) === 0) {
+            $this->addBulkPriceRow();
+        }
+
+        $this->showBulkPriceModal = true;
+    }
+
+    public function addBulkPriceRow(): void
+    {
+        $this->bulkPrices[] = [
+            'id' => null,
+            'min_qty' => null,
+            'max_qty' => null,
+            'price' => null,
+        ];
+    }
+
+    public function removeBulkPriceRow(int $index): void
+    {
+        unset($this->bulkPrices[$index]);
+
+        $this->bulkPrices = array_values($this->bulkPrices);
+    }
+
+    public function saveBulkPrices(): void
+    {
+        $this->validate([
+            'bulkPrices' => ['required', 'array', 'min:1'],
+            'bulkPrices.*.min_qty' => ['required', 'integer', 'min:1'],
+            'bulkPrices.*.max_qty' => ['nullable', 'integer', 'min:1'],
+            'bulkPrices.*.price' => ['required', 'integer', 'min:0'],
+        ]);
+
+        ProductPrice::query()
+            ->where('product_id', '=', $this->bulkProductId)
+            ->delete();
+
+        foreach ($this->bulkPrices as $price) {
+            ProductPrice::query()->create([
+                'product_id' => $this->bulkProductId,
+                'min_qty' => $price['min_qty'],
+                'max_qty' => $price['max_qty'] ?: null,
+                'price' => $price['price'],
+            ]);
+        }
+
+        Session::flash('success', 'Harga grosir berhasil diperbarui.');
+
+        $this->showBulkPriceModal = false;
+        $this->bulkProductId = null;
+        $this->bulkProductName = '';
+        $this->bulkPrices = [];
+
+        $this->dispatch('$refresh');
     }
 
     private function resetForm(): void

@@ -68,4 +68,9 @@ class Product extends Model
 
         return (float) ($bulkPrice?->price ?? $this->selling_price);
     }
+
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
+    }
 }

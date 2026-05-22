@@ -94,6 +94,15 @@
 
                                     <button
                                         type="button"
+                                        wire:click="openBulkPrices({{ $product->id }})"
+                                        wire:loading.attr="disabled"
+                                        class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                                    >
+                                        Harga Grosir
+                                    </button>
+
+                                    <button
+                                        type="button"
                                         wire:click="delete({{ $product->id }})"
                                         wire:confirm="Yakin ingin menghapus produk ini?"
                                         wire:loading.attr="disabled"
@@ -390,6 +399,143 @@
                         class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                     >
                         Simpan Produk
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($showBulkPriceModal)   
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-4xl rounded-3xl bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">
+                            Atur Harga Grosir
+                        </h3>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            {{ $bulkProductName }}
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        wire:click="$set('showBulkPriceModal', false)"
+                        class="rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-200"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <div class="rounded-2xl bg-blue-50 p-4 text-sm text-blue-700">
+                        Harga grosir digunakan sistem POS untuk menentukan harga otomatis berdasarkan jumlah pembelian.
+                        Kosongkan kolom maksimum jika harga berlaku untuk jumlah pembelian tanpa batas.
+                    </div>
+
+                    <div class="mt-5 space-y-4">
+                        @foreach ($bulkPrices as $index => $price)
+                            <div
+                                wire:key="bulk-price-row-{{ $index }}"
+                                class="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 p-4 md:grid-cols-4"
+                            >
+                                <div>
+                                    <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                        Minimal Qty
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        wire:model="bulkPrices.{{ $index }}.min_qty"
+                                        class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    >
+
+                                    @error("bulkPrices.$index.min_qty")
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                        Maksimal Qty
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        wire:model="bulkPrices.{{ $index }}.max_qty"
+                                        placeholder="Tanpa batas"
+                                        class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    >
+
+                                    @error("bulkPrices.$index.max_qty")
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                        Harga
+                                    </label>
+
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">
+                                            Rp
+                                        </span>
+
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            wire:model="bulkPrices.{{ $index }}.price"
+                                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                        >
+                                    </div>
+
+                                    @error("bulkPrices.$index.price")
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="flex items-end">
+                                    <button
+                                        type="button"
+                                        wire:click="removeBulkPriceRow({{ $index }})"
+                                        class="w-full rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 hover:bg-red-100"
+                                    >
+                                        Hapus Baris
+                                    </button>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <button
+                        type="button"
+                        wire:click="addBulkPriceRow"
+                        class="mt-5 rounded-2xl bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                        + Tambah Baris Harga
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-5">
+                    <button
+                        type="button"
+                        wire:click="$set('showBulkPriceModal', false)"
+                        class="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                        Batal
+                    </button>
+
+                    <button
+                        type="button"
+                        wire:click="saveBulkPrices"
+                        wire:loading.attr="disabled"
+                        class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                        Simpan Harga Grosir
                     </button>
                 </div>
             </div>
