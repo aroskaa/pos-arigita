@@ -291,7 +291,7 @@ class ProductIndex extends Component
     public function generateBarcode(): void
     {
         do {
-            $barcode = 'AG' . now()->format('ymdHis') . random_int(10, 99);
+            $barcode = 'AG' . now()->format('ymdHis') . random_int(100, 999);
         } while (
             Product::query()
                 ->where('barcode', '=', $barcode)
@@ -299,6 +299,8 @@ class ProductIndex extends Component
         );
 
         $this->barcode = $barcode;
+
+        $this->dispatch('$refresh');
     }
 
     public function updatedBarcode(): void

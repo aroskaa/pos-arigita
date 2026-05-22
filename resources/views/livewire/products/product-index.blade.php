@@ -181,6 +181,7 @@
 
                         <div class="flex gap-2">
                             <input
+                                wire:key="barcode-input-{{ $barcode ?? 'empty' }}"
                                 type="text"
                                 wire:model.live="barcode"
                                 placeholder="Scan barcode atau generate otomatis"
@@ -190,7 +191,9 @@
                             <button
                                 type="button"
                                 wire:click="generateBarcode"
-                                class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                                wire:loading.attr="disabled"
+                                wire:target="generateBarcode"
+                                class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
                             >
                                 Generate
                             </button>
