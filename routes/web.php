@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProfileController;
+// use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SaleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,6 +34,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return view('pages.reports.index');
         })->name('reports.index');
     });
+    
+    Route::get('/sales', [SaleController::class, 'index'])
+        ->name('sales.index');
+
+    Route::get('/sales/{sale}', [SaleController::class, 'show'])
+        ->name('sales.show');
 });
 
 require __DIR__.'/auth.php';
