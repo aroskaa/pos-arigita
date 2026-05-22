@@ -72,6 +72,8 @@ class PosIndex extends Component
         $this->cart[$productId]['quantity']++;
 
         $this->refreshCartItemPrice($productId);
+
+        $this->dispatch('$refresh');
     }
 
     public function decreaseQuantity(int $productId): void
@@ -88,6 +90,8 @@ class PosIndex extends Component
         $this->cart[$productId]['quantity']--;
 
         $this->refreshCartItemPrice($productId);
+
+        $this->dispatch('$refresh');
     }
 
     public function removeItem(int $productId): void
@@ -116,5 +120,31 @@ class PosIndex extends Component
     public function subtotal(): float
     {
         return collect($this->cart)->sum('subtotal');
+    }
+
+    public function updateQuantity(int $productId, mixed $quantity): void
+    {
+        if (! isset($this->cart[$productId])) {
+            return;
+        }
+
+        $quantity = (int) preg_replace('/\D/', '', (string) $quantity);
+
+        if ($quantity <= 0) {
+            unset($this->cart[$productId]);
+            return;
+        }
+
+        if ($quantity > $this->cart[$productId]['stock']) {
+            $quantity = $this->cart[$productId]['stock'];
+
+            session()->flash('error', 'Jumlah disesuaikan dengan stok tersedia.');
+        }
+
+        $this->cart[$productId]['quantity'] = $quantity;
+
+        $this->refreshCartItemPrice($productId);
+
+        $this->dispatch('$refresh');
     }
 }

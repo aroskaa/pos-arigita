@@ -90,7 +90,8 @@
 
                 <div class="mt-5 space-y-4">
                     @forelse ($cart as $item)
-                        <div class="rounded-2xl border border-slate-200 p-4">
+                        <div wire:key="cart-item-{{ $item['product_id'] }}" 
+                            class="rounded-2xl border border-slate-200 p-4">
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <h4 class="font-semibold text-slate-900">{{ $item['name'] }}</h4>
@@ -116,9 +117,14 @@
                                         -
                                     </button>
 
-                                    <span class="min-w-8 text-center text-sm font-bold">
-                                        {{ $item['quantity'] }}
-                                    </span>
+                                    <input
+                                        type="text"
+                                        inputmode="numeric"
+                                        wire:key="cart-quantity-{{ $item['product_id'] }}-{{ $item['quantity'] }}"
+                                        value="{{ $item['quantity'] }}"
+                                        wire:change="updateQuantity({{ $item['product_id'] }}, $event.target.value)"
+                                        class="w-20 rounded-xl border border-slate-200 px-3 py-2 text-center text-sm font-bold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    >
 
                                     <button
                                         type="button"
