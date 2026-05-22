@@ -14,6 +14,7 @@ class SaleIndex extends Component
 
     public ?string $startDate = null;
     public ?string $endDate = null;
+    public int $filterKey = 0;
 
     protected string $paginationTheme = 'tailwind';
 
@@ -42,5 +43,31 @@ class SaleIndex extends Component
                 ->whereDate('sale_date', '=', now()->toDateString())
                 ->sum('grand_total'),
         ]);
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->startDate = null;
+        $this->endDate = null;
+
+        $this->filterKey++;
+
+        $this->resetPage();
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStartDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDate(): void
+    {
+        $this->resetPage();
     }
 }

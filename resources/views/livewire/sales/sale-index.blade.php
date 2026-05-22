@@ -31,16 +31,26 @@
             >
 
             <input
+                wire:key="start-date-{{ $filterKey }}"
                 type="date"
                 wire:model.live="startDate"
-                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             >
 
             <input
+                wire:key="end-date-{{ $filterKey }}"
                 type="date"
                 wire:model.live="endDate"
-                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             >
+
+            <button
+                type="button"
+                wire:click="resetFilters"
+                class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+            >
+                Reset Filter
+            </button>
         </div>
 
         <div class="mt-6 overflow-x-auto">
