@@ -16,6 +16,7 @@ class SaleController extends Controller
     {
         $sale->load([
             'cashier',
+            'customer',
             'items.product',
         ]);
 

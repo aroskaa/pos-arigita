@@ -8,7 +8,7 @@
     </x-slot>
 
     <div class="mx-auto max-w-5xl">
-        <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div class="print-invoice rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                     <h2 class="text-3xl font-bold text-slate-900">
@@ -20,7 +20,8 @@
                     </p>
                 </div>
 
-                <div class="text-left lg:text-right">
+                {{-- cashier redundant name display --}}
+                {{-- <div class="text-left lg:text-right">
                     <p class="text-sm text-slate-500">
                         Kasir
                     </p>
@@ -28,6 +29,44 @@
                     <h3 class="mt-1 text-lg font-bold text-slate-900">
                         {{ $sale->cashier->name }}
                     </h3>
+                </div> --}}
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                    <p class="text-xs font-semibold uppercase text-slate-400">
+                        Customer
+                    </p>
+
+                    <p class="mt-1 text-sm font-bold text-slate-900">
+                        {{ $sale->customer?->name ?? 'Walk-in Customer' }}
+                    </p>
+
+                    @if($sale->customer?->phone)
+                        <p class="no-print text-xs text-slate-500">
+                            {{ $sale->customer->phone }}
+                        </p>
+                    @endif
+
+                    @if($sale->customer?->address)
+                        <p class="mt-1 text-xs text-slate-500">
+                            {{ $sale->customer->address }}
+                        </p>
+                    @endif
+                </div>
+
+                <div class="md:text-right">
+                    <p class="text-xs font-semibold uppercase text-slate-400">
+                        Kasir
+                    </p>
+
+                    <p class="mt-1 text-sm font-bold text-slate-900">
+                        {{ $sale->cashier->name }}
+                    </p>
+
+                    <p class="text-xs text-slate-500">
+                        {{ $sale->sale_date->format('d M Y H:i') }}
+                    </p>
                 </div>
             </div>
 
@@ -56,7 +95,7 @@
                     <tbody>
                         @foreach ($sale->items as $item)
                             <tr class="border-b border-slate-100">
-                                <td class="px-4 py-4">
+                                <td class="px-4 py-3 text-sm">
                                     <div>
                                         <p class="font-semibold text-slate-900">
                                             {{ $item->product->name }}
@@ -109,7 +148,7 @@
                 </div>
             </div>
 
-            <div class="mt-8 flex flex-wrap items-center gap-3">
+            <div class="no-print mt-8 flex flex-wrap items-center gap-3">
                 <button
                     onclick="window.print()"
                     class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
@@ -126,4 +165,37 @@
             </div>
         </div>
     </div>
+
+    <style>
+        @media print {
+            aside, header, .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+            }
+
+            main, section {
+                padding: 0 !important;
+            }
+
+            .print-invoice {
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                padding: 24px !important;
+            }
+
+            .print-text-sm {
+                font-size: 12px !important;
+            }
+
+            .print-title {
+                font-size: 28px !important;
+            }
+        }
+    </style>
+
 </x-pos-layout>
+

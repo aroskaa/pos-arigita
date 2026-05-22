@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pos;
 
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -14,9 +15,22 @@ class PosIndex extends Component
 {
     public string $search = '';
 
+    public bool $showCustomerModal = false;
+
     public array $cart = [];
 
     public bool $showConfirmModal = false;
+
+    public ?string $customerName = null;
+    public ?string $customerPhone = null;
+    public ?string $customerAddress = null;
+    public string $customerType = 'personal';
+    public ?string $customerNote = null;
+
+    public ?int $selectedCustomerId = null;
+    // public ?string $customerSearch = null;
+
+    public int $customerFormKey = 0;
 
     public function render()
     {
@@ -32,6 +46,17 @@ class PosIndex extends Component
                 ->latest()
                 ->limit(12)
                 ->get(),
+
+            'customers' => Customer::query()
+            ->when($this->customerName, function ($query) {
+                $query->where('name', 'like', '%' . $this->customerName . '%')
+                    ->orWhere('phone', 'like', '%' . $this->customerName . '%');
+            })
+            ->whereNotNull('name')
+            ->latest()
+            ->limit(5)
+            ->get(),
+
             'subtotal' => $this->subtotal(),
         ]);
     }
@@ -59,6 +84,8 @@ class PosIndex extends Component
                 'subtotal' => $product->getPriceForQuantity(1),
             ];
 
+            $this->dispatch('focus-quantity', productId: $product->id);
+
             return;
         }
 
@@ -81,6 +108,8 @@ class PosIndex extends Component
         $this->refreshCartItemPrice($productId);
 
         $this->dispatch('$refresh');
+
+        $this->dispatch('focus-quantity', productId: $productId);
     }
 
     public function decreaseQuantity(int $productId): void
@@ -111,12 +140,85 @@ class PosIndex extends Component
         $this->cart = [];
     }
 
+    public function openCustomerModal(): void
+    {
+        $this->showCustomerModal = true;
+    }
+
+    public function updatedCustomerPhone(): void
+    {
+        $this->customerPhone = preg_replace('/\D/', '', (string) $this->customerPhone);
+    }
+
+    public function closeCustomerModal(): void
+    {
+        $this->showCustomerModal = false;
+    }
+
+    public function selectCustomer(int $customerId): void
+    {
+        $customer = Customer::query()->findOrFail($customerId);
+
+        $this->selectedCustomerId = $customer->id;
+        $this->customerType = $customer->type;
+        $this->customerName = $customer->name;
+        $this->customerPhone = $customer->phone;
+        $this->customerAddress = $customer->address;
+        $this->customerNote = $customer->note;
+
+        $this->customerFormKey++;
+    }
+
+    public function resetCustomer(): void
+    {
+        $this->reset([
+            'selectedCustomerId',
+            'customerName',
+            'customerPhone',
+            'customerAddress',
+            'customerNote',
+        ]);
+
+        $this->customerType = 'personal';
+
+        $this->customerFormKey++;
+    }
+    
+    private function validateCustomerData(): void
+    {
+        if ($this->customerType === 'store') {
+            $this->validate([
+                'customerName' => ['required', 'string', 'max:255'],
+                'customerPhone' => ['required', 'digits_between:8,15'],
+                'customerAddress' => ['nullable', 'string', 'max:1000'],
+            ], [
+                'customerName.required' => 'Nama toko wajib diisi.',
+                'customerPhone.required' => 'Nomor HP toko wajib diisi.',
+                'customerPhone.digits_between' => 'Nomor HP harus terdiri dari 8 sampai 15 digit.',
+            ]);
+
+            return;
+        }
+
+        if ($this->customerName || $this->customerPhone || $this->customerAddress) {
+            $this->validate([
+                'customerName' => ['nullable', 'string', 'max:255'],
+                'customerPhone' => ['nullable', 'digits_between:8,15'],
+                'customerAddress' => ['nullable', 'string', 'max:1000'],
+            ], [
+                'customerPhone.digits_between' => 'Nomor HP harus terdiri dari 8 sampai 15 digit.',
+            ]);
+        }
+    }
+
     public function openConfirmModal(): void
     {
         if (count($this->cart) === 0) {
             Session::flash('error', 'Keranjang masih kosong.');
             return;
         }
+
+        $this->validateCustomerData();
 
         $this->showConfirmModal = true;
     }
@@ -136,14 +238,30 @@ class PosIndex extends Component
             return;
         }
 
+        $this->validateCustomerData();
+        
         DB::beginTransaction();
 
         try {
             $subtotal = $this->subtotal();
 
+            $customerId = $this->selectedCustomerId;
+
+            if (! $customerId && $this->customerName) {
+                $customer = Customer::query()->create([
+                    'type' => $this->customerType,
+                    'name' => $this->customerName,
+                    'phone' => $this->customerPhone,
+                    'address' => $this->customerAddress,
+                    'note' => $this->customerNote,
+                ]);
+
+                $customerId = $customer->id;
+            }
+
             $sale = Sale::query()->create([
                 'invoice_number' => $this->generateInvoiceNumber(),
-                'customer_id' => null,
+                'customer_id' => $customerId,
                 'cashier_id' => Auth::id(),
                 'sale_date' => now(),
 
@@ -184,6 +302,8 @@ class PosIndex extends Component
 
             DB::commit();
 
+            // $this->dispatch('focus-quantity', productId: $product->id);
+
             $invoiceNumber = $sale->invoice_number;
 
             $this->clearCart();
@@ -192,6 +312,10 @@ class PosIndex extends Component
                 'success',
                 "Transaksi berhasil disimpan. Invoice: {$invoiceNumber}"
             );
+
+            $this->resetCustomer();
+
+            $this->customerType = 'personal';
 
             $this->dispatch('$refresh');
 
@@ -254,7 +378,7 @@ class PosIndex extends Component
         $date = now()->format('Ymd');
 
         $lastSale = Sale::query()
-            ->whereDate('created_at', today())
+            ->whereDate('created_at', '=', now()->toDateString())
             ->latest('id')
             ->first();
 
