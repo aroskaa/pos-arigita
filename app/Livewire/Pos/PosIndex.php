@@ -3,6 +3,11 @@
 namespace App\Livewire\Pos;
 
 use App\Models\Product;
+use App\Models\Sale;
+use App\Models\SaleItem;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 
 class PosIndex extends Component
@@ -10,6 +15,8 @@ class PosIndex extends Component
     public string $search = '';
 
     public array $cart = [];
+
+    public bool $showConfirmModal = false;
 
     public function render()
     {
@@ -104,6 +111,100 @@ class PosIndex extends Component
         $this->cart = [];
     }
 
+    public function openConfirmModal(): void
+    {
+        if (count($this->cart) === 0) {
+            Session::flash('error', 'Keranjang masih kosong.');
+            return;
+        }
+
+        $this->showConfirmModal = true;
+    }
+
+    public function closeConfirmModal(): void
+    {
+        $this->showConfirmModal = false;
+    }
+
+    public function saveTransaction(): void
+    {
+        $this->showConfirmModal = false;
+        
+        if (count($this->cart) === 0) {
+            Session::flash('error', 'Keranjang masih kosong.');
+
+            return;
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $subtotal = $this->subtotal();
+
+            $sale = Sale::query()->create([
+                'invoice_number' => $this->generateInvoiceNumber(),
+                'customer_id' => null,
+                'cashier_id' => Auth::id(),
+                'sale_date' => now(),
+
+                'subtotal' => $subtotal,
+                'discount_total' => 0,
+                'grand_total' => $subtotal,
+
+                'paid_amount' => $subtotal,
+                'change_amount' => 0,
+
+                'payment_method' => 'cash',
+                'status' => 'completed',
+            ]);
+
+            foreach ($this->cart as $item) {
+                $product = Product::query()
+                    ->lockForUpdate()
+                    ->findOrFail($item['product_id']);
+
+                if ($item['quantity'] > $product->stock) {
+                    throw new \Exception(
+                        "Stok {$product->name} tidak mencukupi."
+                    );
+                }
+
+                SaleItem::query()->create([
+                    'sale_id' => $sale->id,
+                    'product_id' => $product->id,
+
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['unit_price'],
+                    'cost_price' => $product->average_cost,
+                    'subtotal' => $item['subtotal'],
+                ]);
+
+                $product->decrement('stock', $item['quantity']);
+            }
+
+            DB::commit();
+
+            $invoiceNumber = $sale->invoice_number;
+
+            $this->clearCart();
+
+            Session::flash(
+                'success',
+                "Transaksi berhasil disimpan. Invoice: {$invoiceNumber}"
+            );
+
+            $this->dispatch('$refresh');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Session::flash(
+                'error',
+                $e->getMessage()
+            );
+        }
+    }
+
     private function refreshCartItemPrice(int $productId): void
     {
         $product = Product::query()
@@ -146,5 +247,27 @@ class PosIndex extends Component
         $this->refreshCartItemPrice($productId);
 
         $this->dispatch('$refresh');
+    }
+
+    private function generateInvoiceNumber(): string
+    {
+        $date = now()->format('Ymd');
+
+        $lastSale = Sale::query()
+            ->whereDate('created_at', today())
+            ->latest('id')
+            ->first();
+
+        $lastNumber = 0;
+
+        if ($lastSale) {
+            $parts = explode('-', $lastSale->invoice_number);
+
+            $lastNumber = (int) end($parts);
+        }
+
+        $newNumber = str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
+
+        return "INV-{$date}-{$newNumber}";
     }
 }

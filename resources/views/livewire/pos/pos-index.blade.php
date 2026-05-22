@@ -31,6 +31,12 @@
                     </div>
                 @endif
 
+                @if (session()->has('success'))
+                    <div class="mt-4 rounded-2xl bg-green-50 px-4 py-3 text-sm text-green-700">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
                 <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
                     @forelse ($products as $product)
                         <button
@@ -162,6 +168,8 @@
 
                     <button
                         type="button"
+                        wire:click="openConfirmModal"
+                        wire:loading.attr="disabled"
                         class="mt-5 w-full rounded-2xl bg-blue-600 px-5 py-4 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
                         @disabled(count($cart) === 0)
                     >
@@ -171,4 +179,58 @@
             </div>
         </div>
     </div>
+
+    @if ($showConfirmModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-lg rounded-3xl bg-white shadow-2xl">
+                <div class="border-b border-slate-100 px-6 py-5">
+                    <h3 class="text-xl font-bold text-slate-900">
+                        Konfirmasi Transaksi
+                    </h3>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Pastikan seluruh produk dan quantity sudah sesuai sebelum transaksi diproses.
+                    </p>
+                </div>
+
+                <div class="p-6">
+                    <div class="rounded-2xl bg-blue-50 p-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-semibold text-blue-700">Total Product</span>
+                            <span class="text-sm font-bold text-blue-900">{{ count($cart) }}</span>
+                        </div>
+
+                        <div class="mt-3 flex items-center justify-between">
+                            <span class="text-sm font-semibold text-blue-700">Grand Total</span>
+                            <span class="text-xl font-bold text-blue-900">
+                                Rp {{ number_format($subtotal, 0, ',', '.') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="mt-4 text-sm text-slate-500">
+                        Setelah dikonfirmasi, sistem akan menyimpan transaksi, membuat invoice, dan mengurangi stok produk secara otomatis.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-5">
+                    <button
+                        type="button"
+                        wire:click="closeConfirmModal"
+                        class="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                        Cek Ulang
+                    </button>
+
+                    <button
+                        type="button"
+                        wire:click="saveTransaction"
+                        wire:loading.attr="disabled"
+                        class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                        Ya, Proses Transaksi
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
