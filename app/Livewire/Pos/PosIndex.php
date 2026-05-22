@@ -9,6 +9,7 @@ use App\Models\SaleItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class PosIndex extends Component
@@ -31,6 +32,8 @@ class PosIndex extends Component
     // public ?string $customerSearch = null;
 
     public int $customerFormKey = 0;
+
+    public string $barcodeBuffer = '';
 
     public function render()
     {
@@ -64,15 +67,22 @@ class PosIndex extends Component
     public function addToCart(int $productId): void
     {
         $product = Product::query()
-            ->with('prices')
+            ->with(['unit', 'prices'])
             ->findOrFail($productId);
 
+        if (! $product->is_active) {
+            Session::flash('error', 'Produk tidak aktif.');
+            return;
+        }
+
         if ($product->stock <= 0) {
-            session()->flash('error', 'Stok produk tidak tersedia.');
+            Session::flash('error', 'Stok produk tidak tersedia.');
             return;
         }
 
         if (! isset($this->cart[$product->id])) {
+            $price = $product->getPriceForQuantity(1);
+
             $this->cart[$product->id] = [
                 'product_id' => $product->id,
                 'name' => $product->name,
@@ -80,16 +90,27 @@ class PosIndex extends Component
                 'unit' => $product->unit?->abbreviation,
                 'stock' => $product->stock,
                 'quantity' => 1,
-                'unit_price' => $product->getPriceForQuantity(1),
-                'subtotal' => $product->getPriceForQuantity(1),
+                'unit_price' => $price,
+                'subtotal' => $price,
             ];
+        } else {
+            if ($this->cart[$product->id]['quantity'] >= $this->cart[$product->id]['stock']) {
+                Session::flash('error', 'Jumlah melebihi stok tersedia.');
+                return;
+            }
 
-            $this->dispatch('focus-quantity', productId: $product->id);
+            $this->cart[$product->id]['quantity']++;
 
-            return;
+            $this->refreshCartItemPrice($product->id);
         }
 
-        $this->increaseQuantity($product->id);
+        $this->reset('search');
+
+        $this->dispatch('clear-product-search');
+
+        $this->dispatch('focus-quantity', productId: $product->id);
+
+        $this->dispatch('$refresh');
     }
 
     public function increaseQuantity(int $productId): void
@@ -371,6 +392,31 @@ class PosIndex extends Component
         $this->refreshCartItemPrice($productId);
 
         $this->dispatch('$refresh');
+    }
+
+    #[On('barcode-scanned')]
+    public function handleBarcodeScan(string $barcode): void
+    {
+        $barcode = preg_replace('/[^A-Za-z0-9]/', '', $barcode);
+
+        if ($barcode === '') {
+            return;
+        }
+
+        $product = Product::query()
+            ->with(['unit', 'prices'])
+            ->where('barcode', '=', $barcode)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $product) {
+            Session::flash('error', "Produk dengan barcode {$barcode} tidak ditemukan.");
+            return;
+        }
+
+        $this->addToCart($product->id);
+
+        $this->search = '';
     }
 
     private function generateInvoiceNumber(): string

@@ -175,12 +175,31 @@
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">Barcode</label>
-                        <input
-                            type="text"
-                            wire:model="barcode"
-                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                        >
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Barcode
+                        </label>
+
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                wire:model.live="barcode"
+                                placeholder="Scan barcode atau generate otomatis"
+                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            >
+
+                            <button
+                                type="button"
+                                wire:click="generateBarcode"
+                                class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                            >
+                                Generate
+                            </button>
+                        </div>
+
+                        <p class="mt-1 text-xs text-slate-500">
+                            Kosongkan jika produk belum memiliki barcode. Gunakan scanner untuk mengisi langsung atau tombol Generate untuk kode internal.
+                        </p>
+
                         @error('barcode')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror

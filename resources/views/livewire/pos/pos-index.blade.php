@@ -15,16 +15,14 @@
                     </div>
                 </div>
 
-                <div class="mt-6">
-                    <input
-                        id="product-search-input"
-                        type="text"
-                        wire:model.live="search"
-                        placeholder="Scan barcode atau cari produk..."
-                        autofocus
-                        class="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    >
-                </div>
+                <input
+                    id="product-search-input"
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Scan barcode atau cari produk..."
+                    autocomplete="off"
+                    class="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                >
 
                 @if (session()->has('error'))
                     <div class="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -42,8 +40,11 @@
                     @forelse ($products as $product)
                         <button
                             type="button"
-                            wire:click="addToCart({{ $product->id }})"
-                            class="rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
+                            wire:key="pos-product-card-{{ $product->id }}"
+                            wire:click.prevent="addToCart({{ $product->id }})"
+                            wire:loading.attr="disabled"
+                            wire:target="addToCart({{ $product->id }})"
+                            class="rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50 disabled:pointer-events-none disabled:opacity-60"
                         >
                             <div class="flex items-start justify-between gap-3">
                                 <div>
@@ -518,6 +519,14 @@
 
     <script>
         document.addEventListener('livewire:init', () => {
+            Livewire.on('clear-product-search', () => {
+                const searchInput = document.getElementById('product-search-input');
+
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+            });
+
             Livewire.on('focus-quantity', (event) => {
                 const productId = event.productId;
 
@@ -530,6 +539,57 @@
                     }
                 }, 100);
             });
+        });
+
+        let barcodeBuffer = '';
+        let barcodeTimer = null;
+        let barcodeLastKeyTime = 0;
+
+        document.addEventListener('keydown', function (event) {
+            const activeElement = document.activeElement;
+            const tagName = activeElement?.tagName;
+
+            const isTypingField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName);
+
+            /**
+             * Scanner mode hanya aktif saat user TIDAK sedang mengetik di input biasa.
+             * Jadi search product, form customer, quantity, dan input lain tidak akan terganggu.
+             */
+            if (isTypingField) {
+                return;
+            }
+
+            const now = Date.now();
+            const diff = now - barcodeLastKeyTime;
+            barcodeLastKeyTime = now;
+
+            if (event.key === 'Enter') {
+                if (barcodeBuffer.length >= 5) {
+                    event.preventDefault();
+
+                    Livewire.dispatch('barcode-scanned', {
+                        barcode: barcodeBuffer
+                    });
+
+                    barcodeBuffer = '';
+                }
+
+                return;
+            }
+
+            if (event.key.length === 1) {
+                if (diff > 80) {
+                    barcodeBuffer = '';
+                }
+
+                barcodeBuffer += event.key;
+
+                clearTimeout(barcodeTimer);
+
+                barcodeTimer = setTimeout(() => {
+                    barcodeBuffer = '';
+                }, 200);
+            }
         });
     </script>
 </div>

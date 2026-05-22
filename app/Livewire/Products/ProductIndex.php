@@ -287,4 +287,22 @@ class ProductIndex extends Component
         $this->minimum_stock = null;
         $this->is_active = true;
     }
+
+    public function generateBarcode(): void
+    {
+        do {
+            $barcode = 'AG' . now()->format('ymdHis') . random_int(10, 99);
+        } while (
+            Product::query()
+                ->where('barcode', '=', $barcode)
+                ->exists()
+        );
+
+        $this->barcode = $barcode;
+    }
+
+    public function updatedBarcode(): void
+    {
+        $this->barcode = preg_replace('/[^A-Za-z0-9]/', '', (string) $this->barcode);
+    }
 }
