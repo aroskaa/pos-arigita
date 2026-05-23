@@ -175,7 +175,29 @@
 
                 <div class="hidden md:flex items-center gap-3">
                     <div class="rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
-                        {{ now()->format('d M Y') }}
+                        <div
+                            x-data="{
+                                time: '',
+                                updateTime() {
+                                    const now = new Date();
+
+                                    this.time = new Intl.DateTimeFormat('id-ID', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit',
+                                        hour12: false,
+                                        timeZone: 'Asia/Makassar',
+                                    }).format(now).replace(/\./g, ':');
+                                }
+                            }"
+                            x-init="updateTime(); setInterval(() => updateTime(), 1000)"
+                            class="rounded-xl bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700"
+                        >
+                            <span x-text="time"></span>
+                        </div>
                     </div>
                 </div>
             </header>

@@ -21,12 +21,38 @@
     </div>
 
     <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <input
-            type="text"
-            wire:model.live.debounce.300ms="search"
-            placeholder="Cari produk, SKU, atau barcode..."
-            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 md:max-w-sm"
-        >
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+            <input
+                type="text"
+                wire:model.live.debounce.300ms="search"
+                placeholder="Cari produk, SKU, atau barcode..."
+                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
+
+            <input
+                id="stock-adjustment-start-date"
+                type="date"
+                wire:key="stock-adjustment-start-date-{{ $dateFilterKey }}"
+                wire:model.live="startDate"
+                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
+
+            <input
+                id="stock-adjustment-end-date"
+                type="date"
+                wire:key="stock-adjustment-end-date-{{ $dateFilterKey }}"
+                wire:model.live="endDate"
+                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
+
+            <button
+                type="button"
+                wire:click="resetFilters"
+                class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+            >
+                Reset Filter
+            </button>
+        </div>
 
         @if (session()->has('success'))
             <div class="mt-4 rounded-2xl bg-green-50 px-4 py-3 text-sm text-green-700">
@@ -282,6 +308,21 @@
 
     <script>
         document.addEventListener('livewire:init', () => {
+            Livewire.on('clear-stock-adjustment-date-filters', () => {
+                setTimeout(() => {
+                    const startDate = document.getElementById('stock-adjustment-start-date');
+                    const endDate = document.getElementById('stock-adjustment-end-date');
+
+                    if (startDate) {
+                        startDate.value = '';
+                    }
+
+                    if (endDate) {
+                        endDate.value = '';
+                    }
+                }, 100);
+            });
+
             Livewire.on('focus-adjustment-product', () => {
                 setTimeout(() => {
                     document.getElementById('adjustment-product-search')?.focus();

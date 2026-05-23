@@ -315,11 +315,15 @@
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">Stok</label>
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Stok
+                        </label>
+
                         <div
                             x-data="{
                                 raw: @entangle('stock').live,
                                 display: '',
+                                isEdit: @js((bool) $productId),
                                 format(value) {
                                     const number = String(value ?? '').replace(/\D/g, '');
 
@@ -342,9 +346,18 @@
                                 x-model="display"
                                 x-on:input="format($event.target.value)"
                                 placeholder="0"
-                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                @readonly($productId)
+                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100
+                                    {{ $productId ? 'cursor-not-allowed bg-slate-100 text-slate-500' : 'bg-white text-slate-900' }}"
                             >
                         </div>
+
+                        @if ($productId)
+                            <p class="mt-1 text-xs text-slate-500">
+                                Stok tidak dapat diubah dari form produk. Gunakan menu Stock Adjustment untuk koreksi stok.
+                            </p>
+                        @endif
+
                         @error('stock')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror

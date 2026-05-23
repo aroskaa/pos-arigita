@@ -169,7 +169,7 @@
                                         </button>
                                     @endif
 
-                                    @if ($order->status === 'converted')
+                                    @if ($order->status === 'converted' && $order->sale?->status !== 'cancelled')
                                         <button
                                             type="button"
                                             wire:click="openCancelModal({{ $order->id }})"
@@ -263,6 +263,21 @@
                                 Informasi Konversi POS
                             </p>
 
+                            @if (! empty($detailOrder['invoice_number']))
+                                <p class="mt-2 text-sm text-blue-900">
+                                    Invoice POS:
+                                    <span class="font-bold">
+                                        {{ $detailOrder['invoice_number'] }}
+                                    </span>
+
+                                    @if (! empty($detailOrder['sale_status']))
+                                        <span class="ml-2 rounded-full bg-white px-2 py-1 text-xs font-semibold text-blue-700">
+                                            {{ ucfirst($detailOrder['sale_status']) }}
+                                        </span>
+                                    @endif
+                                </p>
+                            @endif
+                            
                             <p class="mt-1 text-sm text-blue-900">
                                 Order ini telah diproses menjadi transaksi POS
                                 oleh <span class="font-bold">{{ $detailOrder['converted_by'] ?? '-' }}</span>

@@ -16,6 +16,12 @@ class StockAdjustmentIndex extends Component
 
     public string $search = '';
 
+    public ?string $startDate = null;
+
+    public ?string $endDate = null;
+
+    public int $dateFilterKey = 0;
+
     public bool $showModal = false;
 
     public string $productSearch = '';
@@ -47,6 +53,12 @@ class StockAdjustmentIndex extends Component
                             ->orWhere('barcode', 'like', '%' . $this->search . '%');
                     });
                 })
+                ->when($this->startDate, function ($query) {
+                    $query->whereDate('created_at', '>=', $this->startDate);
+                })
+                ->when($this->endDate, function ($query) {
+                    $query->whereDate('created_at', '<=', $this->endDate);
+                })
                 ->latest()
                 ->paginate(10),
 
@@ -68,6 +80,29 @@ class StockAdjustmentIndex extends Component
     public function updatedSearch(): void
     {
         $this->resetPage();
+    }
+    
+    public function updatedStartDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->startDate = null;
+        $this->endDate = null;
+
+        $this->dateFilterKey++;
+
+        $this->resetPage();
+
+        $this->dispatch('clear-stock-adjustment-date-filters');
     }
 
     public function updatedPhysicalStock(): void

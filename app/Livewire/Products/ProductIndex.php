@@ -143,15 +143,34 @@ class ProductIndex extends Component
     {
         $validated = $this->validate();
 
-        Product::query()->updateOrCreate(
-            ['id' => $this->productId],
-            [
+        if ($this->productId) {
+            Product::query()
+                ->findOrFail($this->productId)
+                ->update([
+                    'category_id' => (int) $validated['category_id'],
+                    'unit_id' => (int) $validated['unit_id'],
+                    'name' => $validated['name'],
+                    'slug' => Str::slug($validated['name']),
+                    'sku' => $validated['sku'],
+                    'barcode' => $validated['barcode'] ?? null,
+                    'description' => $this->description,
+                    'purchase_price' => (int) $validated['purchase_price'],
+                    'selling_price' => (int) $validated['selling_price'],
+
+                    // average_cost tidak ikut diubah saat edit produk,
+                    // karena nilai ini sudah dipengaruhi pembelian dan moving average.
+
+                    'minimum_stock' => (int) $validated['minimum_stock'],
+                    'is_active' => $this->is_active,
+                ]);
+        } else {
+            Product::query()->create([
                 'category_id' => (int) $validated['category_id'],
                 'unit_id' => (int) $validated['unit_id'],
                 'name' => $validated['name'],
                 'slug' => Str::slug($validated['name']),
                 'sku' => $validated['sku'],
-                'barcode' => $validated['barcode'],
+                'barcode' => $validated['barcode'] ?? null,
                 'description' => $this->description,
                 'purchase_price' => (int) $validated['purchase_price'],
                 'selling_price' => (int) $validated['selling_price'],
@@ -159,8 +178,8 @@ class ProductIndex extends Component
                 'stock' => (int) $validated['stock'],
                 'minimum_stock' => (int) $validated['minimum_stock'],
                 'is_active' => $this->is_active,
-            ]
-        );
+            ]);
+        }
 
         Session::flash(
             'success',

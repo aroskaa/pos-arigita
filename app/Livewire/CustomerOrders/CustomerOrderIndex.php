@@ -90,13 +90,15 @@ class CustomerOrderIndex extends Component
     public function openDetail(int $orderId): void
     {
         $order = CustomerOrder::query()
-            ->with(['items.product', 'converter', 'rejecter', 'canceller'])
+            ->with(['items.product', 'converter', 'rejecter', 'canceller', 'sale'])
             ->findOrFail($orderId);
 
         $this->selectedOrderId = $order->id;
 
         $this->detailOrder = [
             'id' => $order->id,
+            'invoice_number' => $order->sale?->invoice_number,
+            'sale_status' => $order->sale?->status,
             'order_number' => $order->order_number,
             'customer_name' => $order->customer_name,
             'customer_type' => $order->customer_type,

@@ -288,6 +288,16 @@ class PosIndex extends Component
         DB::beginTransaction();
 
         try {
+            if ($this->loadedCustomerOrderId) {
+                $customerOrder = CustomerOrder::query()
+                    ->lockForUpdate()
+                    ->findOrFail($this->loadedCustomerOrderId);
+
+                if ($customerOrder->status !== 'pending') {
+                    throw new \Exception('Order pelanggan ini sudah tidak berstatus pending dan tidak dapat diproses ulang.');
+                }
+            }
+
             $subtotal = $this->subtotal();
 
             $customerId = $this->selectedCustomerId;
@@ -366,7 +376,7 @@ class PosIndex extends Component
             }
 
             if ($this->loadedCustomerOrderId) {
-                CustomerOrder::query()
+                $updated = CustomerOrder::query()
                     ->where('id', $this->loadedCustomerOrderId)
                     ->where('status', 'pending')
                     ->update([
@@ -374,6 +384,10 @@ class PosIndex extends Component
                         'converted_at' => now(),
                         'converted_by' => Auth::id(),
                     ]);
+
+                if ($updated === 0) {
+                    throw new \Exception('Status order pelanggan gagal diperbarui. Transaksi dibatalkan untuk menjaga konsistensi data.');
+                }
             }
 
             DB::commit();

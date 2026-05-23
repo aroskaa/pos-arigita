@@ -62,13 +62,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pos', function () {
             return view('pages.pos.index');
         })->name('pos.index');
-    });
-    
-    Route::get('/sales', [SaleController::class, 'index'])
+
+        Route::get('/sales', [SaleController::class, 'index'])
         ->name('sales.index');
 
-    Route::get('/sales/{sale}', [SaleController::class, 'show'])
-        ->name('sales.show');
+        Route::get('/sales/{sale}', [SaleController::class, 'show'])
+            ->name('sales.show');
+        });
 });
 
 require __DIR__.'/auth.php';
