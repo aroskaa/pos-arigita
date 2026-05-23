@@ -36,10 +36,12 @@ class SaleIndex extends Component
                 ->paginate(10),
 
             'todaySales' => Sale::query()
+                ->where('status', '!=', 'cancelled')
                 ->whereDate('sale_date', '=', now()->toDateString())
                 ->count(),
 
             'todayRevenue' => Sale::query()
+                ->where('status', '!=', 'cancelled')
                 ->whereDate('sale_date', '=', now()->toDateString())
                 ->sum('grand_total'),
         ]);

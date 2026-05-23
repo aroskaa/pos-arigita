@@ -24,8 +24,15 @@
                             Invoice ini telah dibatalkan.
 
                             @if ($sale->cancel_note)
-                                <span class="block mt-1 font-normal">
+                                <span class="mt-1 block font-normal">
                                     Alasan: {{ $sale->cancel_note }}
+                                </span>
+                            @endif
+
+                            @if ($sale->canceller || $sale->cancelled_at)
+                                <span class="mt-1 block font-bold">
+                                    Dibatalkan oleh {{ $sale->canceller?->name ?? '-' }}
+                                    pada {{ $sale->cancelled_at?->format('d M Y H:i') ?? '-' }}.
                                 </span>
                             @endif
                         </div>

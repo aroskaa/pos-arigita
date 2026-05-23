@@ -86,6 +86,12 @@
                                         {{ $sale->invoice_number }}
                                     </p>
 
+                                    @if ($sale->status === 'cancelled')
+                                        <span class="mt-1 inline-flex rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">
+                                            Cancelled
+                                        </span>
+                                    @endif
+
                                     <p class="text-xs text-slate-500">
                                         {{ $sale->items->count() }} item
                                     </p>
@@ -101,7 +107,9 @@
                             </td>
 
                             <td class="px-4 py-4 text-sm font-bold text-slate-900">
-                                Rp {{ number_format($sale->grand_total, 0, ',', '.') }}
+                                <span class="{{ $sale->status === 'cancelled' ? 'text-red-600 line-through' : 'text-slate-900' }}">
+                                    Rp {{ number_format($sale->grand_total, 0, ',', '.') }}
+                                </span>
                             </td>
 
                             <td class="px-4 py-4 text-right">
