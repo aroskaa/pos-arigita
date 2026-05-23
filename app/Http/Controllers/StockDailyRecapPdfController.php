@@ -19,9 +19,11 @@ class StockDailyRecapPdfController extends Controller
         $generatedAt = now();
 
         $rows = $service->generate($validated['date']);
+        $adjustments = $service->adjustments($validated['date']);
 
         $pdf = Pdf::loadView('pdf.stock-daily-recap', [
             'rows' => $rows,
+            'adjustments' => $adjustments,
             'recapDate' => $recapDate,
             'generatedAt' => $generatedAt,
             'generatedBy' => $request->user()->name,

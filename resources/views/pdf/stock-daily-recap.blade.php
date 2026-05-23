@@ -93,6 +93,34 @@
             font-size: 9px;
             color: #6b7280;
         }
+
+        .section-title {
+            margin-top: 18px;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        table.adjustment {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        table.adjustment th {
+            background: #fff7ed;
+            border: 1px solid #9ca3af;
+            padding: 6px 5px;
+            font-size: 9px;
+            text-align: center;
+        }
+
+        table.adjustment td {
+            border: 1px solid #d1d5db;
+            padding: 5px;
+            font-size: 9px;
+            vertical-align: top;
+        }
     </style>
 </head>
 <body>
@@ -167,6 +195,64 @@
         </tbody>
     </table>
 
+    @if ($adjustments->count() > 0)
+        <div class="section-title">
+            Stock Adjustment
+        </div>
+
+        <table class="adjustment">
+            <thead>
+                <tr>
+                    <th style="width: 28px;">No</th>
+                    <th>Nama Barang</th>
+                    <th style="width: 70px;">Stok Sistem</th>
+                    <th style="width: 70px;">Stok Fisik</th>
+                    <th style="width: 60px;">Selisih</th>
+                    <th>Catatan</th>
+                    <th style="width: 90px;">User</th>
+                    <th style="width: 50px;">Jam</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach ($adjustments as $index => $adjustment)
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+
+                        <td>
+                            <div class="product-name">{{ $adjustment['product_name'] }}</div>
+                            <div class="sku">{{ $adjustment['sku'] }}</div>
+                        </td>
+
+                        <td class="text-right">
+                            {{ number_format($adjustment['system_stock'], 0, ',', '.') }}
+                        </td>
+
+                        <td class="text-right">
+                            {{ number_format($adjustment['physical_stock'], 0, ',', '.') }}
+                        </td>
+
+                        <td class="text-right">
+                            {{ $adjustment['difference'] > 0 ? '+' : '' }}{{ number_format($adjustment['difference'], 0, ',', '.') }}
+                        </td>
+
+                        <td>
+                            {{ $adjustment['note'] }}
+                        </td>
+
+                        <td>
+                            {{ $adjustment['created_by'] }}
+                        </td>
+
+                        <td class="text-center">
+                            {{ $adjustment['created_at'] }}
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+    
     <div class="footer">
         Catatan: Barang masuk dan barang keluar merupakan total agregat seluruh transaksi stok pada tanggal rekap untuk masing-masing produk.
     </div>

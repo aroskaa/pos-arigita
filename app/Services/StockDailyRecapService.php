@@ -90,4 +90,31 @@ class StockDailyRecapService
             ];
         });
     }
+
+    public function adjustments(string $date): Collection
+    {
+        $date = Carbon::parse($date);
+
+        return StockMovement::query()
+            ->with(['product', 'creator'])
+            ->where('type', 'adjustment')
+            ->whereBetween('created_at', [
+                $date->copy()->startOfDay(),
+                $date->copy()->endOfDay(),
+            ])
+            ->orderBy('created_at')
+            ->get()
+            ->map(function (StockMovement $movement) {
+                return [
+                    'product_name' => $movement->product->name,
+                    'sku' => $movement->product->sku,
+                    'system_stock' => $movement->stock_before,
+                    'physical_stock' => $movement->stock_after,
+                    'difference' => $movement->stock_after - $movement->stock_before,
+                    'note' => $movement->note,
+                    'created_by' => $movement->creator?->name ?? '-',
+                    'created_at' => $movement->created_at->format('H:i'),
+                ];
+            });
+    }
 }
