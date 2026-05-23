@@ -13,6 +13,10 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/order', function () {
+    return view('pages.customer-orders.create');
+})->name('customer-orders.create');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)
         ->name('dashboard');
