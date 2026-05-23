@@ -76,6 +76,12 @@
                         <span>🧮</span>
                         <span>Rekap Stok</span>
                     </a>
+
+                    <a href="{{ route('stock-adjustments.index') }}"
+                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('stock-adjustments.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                        <span>🛠️</span>
+                        <span>Stock Adjustment</span>
+                    </a>
                 @endif
             </nav>
 

@@ -44,6 +44,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/stock-daily-recaps/download', StockDailyRecapPdfController::class)
             ->name('stock-daily-recaps.download');
+
+        Route::get('/stock-adjustments', function () {
+            return view('pages.stock-adjustments.index');
+        })->name('stock-adjustments.index');
     });
 
     Route::middleware('role:owner,admin,cashier')->group(function () {
