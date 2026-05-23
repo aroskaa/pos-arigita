@@ -14,9 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'role' => RoleMiddleware::class,
-        ]);
-        
-        $middleware->alias([
             'customer.order.limit' => \App\Http\Middleware\CustomerOrderRateLimit::class,
         ]);
     })

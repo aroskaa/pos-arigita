@@ -52,6 +52,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/stock-adjustments', function () {
             return view('pages.stock-adjustments.index');
         })->name('stock-adjustments.index');
+
+        Route::get('/customer-orders', function () {
+            return view('pages.customer-orders.index');
+        })->name('customer-orders.index');
     });
 
     Route::middleware('role:owner,admin,cashier')->group(function () {

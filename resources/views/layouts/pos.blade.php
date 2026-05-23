@@ -28,13 +28,19 @@
                     <span>Dashboard</span>
                 </a>
 
-                <a href="{{ route('pos.index') }}"
-                    class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                    <span>🧾</span>
-                    <span>POS Transaksi</span>
-                </a>
-
                 @if(auth()->user()->hasRole(['owner', 'admin']))
+                    <a href="{{ route('pos.index') }}"
+                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                        <span>🧾</span>
+                        <span>POS Transaksi</span>
+                    </a>
+
+                    <a href="{{ route('customer-orders.index') }}"
+                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('customer-orders.index') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                        <span>🛒</span>
+                        <span>Order Pelanggan</span>
+                    </a>
+                
                     <a href="{{ route('products.index') }}"
                         class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('products.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
                         <span>📦</span>
