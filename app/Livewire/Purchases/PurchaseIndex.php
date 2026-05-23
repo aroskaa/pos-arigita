@@ -23,6 +23,10 @@ class PurchaseIndex extends Component
 
     public ?int $supplier_id = null;
 
+    public string $supplierSearch = '';
+
+    public ?array $selectedSupplier = null;
+
     public ?string $purchase_date = null;
 
     public ?string $note = null;
@@ -66,9 +70,17 @@ class PurchaseIndex extends Component
                 ->latest()
                 ->paginate(10),
 
-            'suppliers' => Supplier::query()
+            'supplierSuggestions' => Supplier::query()
                 ->where('is_active', true)
+                ->when($this->supplierSearch, function ($query) {
+                    $query->where(function ($supplierQuery) {
+                        $supplierQuery->where('name', 'like', '%' . $this->supplierSearch . '%')
+                            ->orWhere('phone', 'like', '%' . $this->supplierSearch . '%')
+                            ->orWhere('address', 'like', '%' . $this->supplierSearch . '%');
+                    });
+                })
                 ->orderBy('name')
+                ->limit(8)
                 ->get(),
 
             'productSuggestions' => Product::query()
@@ -98,6 +110,60 @@ class PurchaseIndex extends Component
         $this->resetForm();
 
         $this->showModal = true;
+
+        $this->dispatch('focus-purchase-supplier');
+    }
+
+    public function selectSupplier(int $supplierId): void
+    {
+        $supplier = Supplier::query()
+            ->where('is_active', true)
+            ->findOrFail($supplierId);
+
+        $this->supplier_id = $supplier->id;
+
+        $this->selectedSupplier = [
+            'id' => $supplier->id,
+            'name' => $supplier->name,
+            'phone' => $supplier->phone,
+        ];
+
+        $this->supplierSearch = $supplier->name;
+
+        $this->dispatch('focus-purchase-date');
+    }
+
+    public function selectFirstSupplierOrSkip(): void
+    {
+        if (! $this->supplierSearch) {
+            $this->supplier_id = null;
+            $this->selectedSupplier = null;
+
+            $this->dispatch('focus-purchase-date');
+
+            return;
+        }
+
+        $supplier = Supplier::query()
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->where('name', 'like', '%' . $this->supplierSearch . '%')
+                    ->orWhere('phone', 'like', '%' . $this->supplierSearch . '%')
+                    ->orWhere('address', 'like', '%' . $this->supplierSearch . '%');
+            })
+            ->orderBy('name')
+            ->first();
+
+        if (! $supplier) {
+            $this->supplier_id = null;
+            $this->selectedSupplier = null;
+
+            $this->dispatch('focus-purchase-date');
+
+            return;
+        }
+
+        $this->selectSupplier($supplier->id);
     }
 
     public function selectProduct(int $productId): void
@@ -192,7 +258,9 @@ class PurchaseIndex extends Component
         $this->quantity = 1;
         $this->unit_cost = null;
 
+        $this->dispatch('clear-purchase-item-form');
         $this->dispatch('focus-purchase-product');
+        $this->dispatch('$refresh');
     }
 
     public function removeItem(int $productId): void
@@ -357,13 +425,15 @@ class PurchaseIndex extends Component
     private function resetForm(): void
     {
         $this->reset([
-        'supplier_id',
-        'note',
-        'selectedProductId',
-        'selectedProduct',
-        'productSearch',
-        'unit_cost',
-        'items',
+            'supplier_id',
+            'supplierSearch',
+            'selectedSupplier',
+            'note',
+            'selectedProductId',
+            'selectedProduct',
+            'productSearch',
+            'unit_cost',
+            'items',
     ]);
 
         $this->purchase_date = now()->format('Y-m-d');

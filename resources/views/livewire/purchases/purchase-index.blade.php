@@ -138,18 +138,46 @@
                                 Supplier
                             </label>
 
-                            <select
-                                wire:model="supplier_id"
-                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                            >
-                                <option value="">Tanpa supplier</option>
+                            <div class="relative">
+                                <input
+                                    id="purchase-supplier"
+                                    type="text"
+                                    wire:model.live.debounce.250ms="supplierSearch"
+                                    wire:keydown.enter.prevent="selectFirstSupplierOrSkip"
+                                    placeholder="Ketik nama supplier atau tekan Enter untuk tanpa supplier..."
+                                    autocomplete="off"
+                                    class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                >
 
-                                @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier->id }}">
-                                        {{ $supplier->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                                @if ($supplierSearch && ! $selectedSupplier && $supplierSuggestions->count() > 0)
+                                    <div class="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                                        @foreach ($supplierSuggestions as $supplier)
+                                            <button
+                                                type="button"
+                                                wire:key="purchase-supplier-suggestion-{{ $supplier->id }}"
+                                                wire:click="selectSupplier({{ $supplier->id }})"
+                                                class="w-full px-4 py-3 text-left hover:bg-blue-50"
+                                            >
+                                                <p class="text-sm font-bold text-slate-900">
+                                                    {{ $supplier->name }}
+                                                </p>
+
+                                                <p class="text-xs text-slate-500">
+                                                    {{ $supplier->phone ?: 'Tanpa nomor HP' }}
+                                                </p>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if ($selectedSupplier)
+                                <div class="mt-2 rounded-xl bg-blue-50 px-3 py-2">
+                                    <p class="text-xs font-semibold text-blue-700">
+                                        Supplier dipilih: {{ $selectedSupplier['name'] }}
+                                    </p>
+                                </div>
+                            @endif
 
                             @error('supplier_id')
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -162,6 +190,7 @@
                             </label>
 
                             <input
+                                id="purchase-date"
                                 type="date"
                                 wire:model="purchase_date"
                                 x-on:keydown.enter.prevent="document.getElementById('purchase-product-search')?.focus()"
@@ -340,9 +369,19 @@
 
                                         this.raw = number;
                                         this.display = new Intl.NumberFormat('id-ID').format(number);
+                                    },
+                                    clear() {
+                                        this.display = '';
+                                        this.raw = null;
                                     }
                                 }"
-                                x-init="format(raw)"
+                                x-init="
+                                    format(raw);
+
+                                    window.addEventListener('clear-purchase-item-form', () => {
+                                        clear();
+                                    });
+                                "
                                 x-effect="format(raw)"
                                 class="lg:col-span-3"
                             >
@@ -611,10 +650,38 @@
 
     <script>
         document.addEventListener('livewire:init', () => {
+            Livewire.on('focus-purchase-date', () => {
+                setTimeout(() => {
+                    const dateInput = document.getElementById('purchase-date');
+
+                    if (dateInput) {
+                        dateInput.focus();
+
+                        if (typeof dateInput.showPicker === 'function') {
+                            try {
+                                dateInput.showPicker();
+                            } catch (error) {
+                                // Browser bisa menolak showPicker jika bukan direct user gesture.
+                            }
+                        }
+                    }
+                }, 150);
+            });
+
+            Livewire.on('focus-purchase-supplier', () => {
+                setTimeout(() => {
+                    document.getElementById('purchase-supplier')?.focus();
+                }, 150);
+            });
+
             Livewire.on('focus-purchase-qty', () => {
                 setTimeout(() => {
-                    document.getElementById('purchase-quantity')?.focus();
-                    document.getElementById('purchase-quantity')?.select();
+                    const qtyInput = document.getElementById('purchase-quantity');
+
+                    if (qtyInput) {
+                        qtyInput.focus();
+                        qtyInput.select();
+                    }
                 }, 100);
             });
 
@@ -623,8 +690,35 @@
                     const input = document.getElementById('purchase-product-search');
 
                     if (input) {
+                        input.value = '';
                         input.focus();
                         input.select();
+                    }
+
+                    const qtyInput = document.getElementById('purchase-quantity');
+
+                    if (qtyInput) {
+                        qtyInput.value = '1';
+                    }
+                }, 150);
+            });
+
+            Livewire.on('clear-purchase-item-form', () => {
+                setTimeout(() => {
+                    const productInput = document.getElementById('purchase-product-search');
+                    const qtyInput = document.getElementById('purchase-quantity');
+                    const costInput = document.getElementById('purchase-unit-cost');
+
+                    if (productInput) {
+                        productInput.value = '';
+                    }
+
+                    if (qtyInput) {
+                        qtyInput.value = '1';
+                    }
+
+                    if (costInput) {
+                        costInput.value = '';
                     }
                 }, 100);
             });
