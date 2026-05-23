@@ -166,13 +166,20 @@ class PosIndex extends Component
         $this->showCustomerModal = true;
     }
 
-    public function updatedCustomerPhone(): void
-    {
-        $this->customerPhone = preg_replace('/\D/', '', (string) $this->customerPhone);
-    }
+    // public function updatedCustomerPhone(): void
+    // {
+    //     $this->customerPhone = preg_replace('/\D/', '', (string) $this->customerPhone);
+    // }
 
     public function closeCustomerModal(): void
     {
+        $this->showCustomerModal = false;
+    }
+
+    public function saveCustomerData(): void
+    {
+        $this->validateCustomerData();
+
         $this->showCustomerModal = false;
     }
 
@@ -210,26 +217,26 @@ class PosIndex extends Component
         if ($this->customerType === 'store') {
             $this->validate([
                 'customerName' => ['required', 'string', 'max:255'],
-                'customerPhone' => ['required', 'digits_between:8,15'],
+                'customerPhone' => ['required', 'regex:/^[0-9]+$/', 'digits_between:8,15'],
                 'customerAddress' => ['nullable', 'string', 'max:1000'],
             ], [
                 'customerName.required' => 'Nama toko wajib diisi.',
                 'customerPhone.required' => 'Nomor HP toko wajib diisi.',
+                'customerPhone.regex' => 'Nomor HP hanya boleh berisi angka.',
                 'customerPhone.digits_between' => 'Nomor HP harus terdiri dari 8 sampai 15 digit.',
             ]);
 
             return;
         }
 
-        if ($this->customerName || $this->customerPhone || $this->customerAddress) {
-            $this->validate([
-                'customerName' => ['nullable', 'string', 'max:255'],
-                'customerPhone' => ['nullable', 'digits_between:8,15'],
-                'customerAddress' => ['nullable', 'string', 'max:1000'],
-            ], [
-                'customerPhone.digits_between' => 'Nomor HP harus terdiri dari 8 sampai 15 digit.',
-            ]);
-        }
+        $this->validate([
+            'customerName' => ['nullable', 'string', 'max:255'],
+            'customerPhone' => ['nullable', 'regex:/^[0-9]+$/', 'digits_between:8,15'],
+            'customerAddress' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'customerPhone.regex' => 'Nomor HP hanya boleh berisi angka.',
+            'customerPhone.digits_between' => 'Nomor HP harus terdiri dari 8 sampai 15 digit.',
+        ]);
     }
 
     public function openConfirmModal(): void
@@ -251,15 +258,14 @@ class PosIndex extends Component
 
     public function saveTransaction(): void
     {
+        $this->validateCustomerData();
+
         $this->showConfirmModal = false;
-        
+
         if (count($this->cart) === 0) {
             Session::flash('error', 'Keranjang masih kosong.');
-
             return;
         }
-
-        $this->validateCustomerData();
         
         DB::beginTransaction();
 

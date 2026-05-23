@@ -483,7 +483,7 @@
                             inputmode="numeric"
                             wire:model.live="customerPhone"
                             placeholder="82123456789"
-                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
+                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         >
                     </div>
                     @error('customerPhone')
@@ -506,8 +506,9 @@
                 <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
                     <button
                         type="button"
-                        wire:click="closeCustomerModal"
-                        class="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                        wire:click="saveCustomerData"
+                        wire:loading.attr="disabled"
+                        class="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
                     >
                         Selesai
                     </button>
