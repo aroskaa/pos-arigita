@@ -107,9 +107,11 @@
                                         bg-red-50 text-red-700
                                     @elseif ($movement->type === 'adjustment')
                                         bg-yellow-50 text-yellow-700
+                                    @elseif ($movement->type === 'order_cancel')
+                                        bg-green-50 text-green-700
                                     @else
                                         bg-slate-100 text-slate-700
-                                    @endif
+                                    @endif  
                                 ">
                                     {{ $typeLabel }}
                                 </span>

@@ -18,6 +18,18 @@
                     <p class="mt-2 text-sm text-slate-500">
                         {{ $sale->sale_date->format('d M Y H:i') }}
                     </p>
+
+                    @if ($sale->status === 'cancelled')
+                        <div class="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                            Invoice ini telah dibatalkan.
+
+                            @if ($sale->cancel_note)
+                                <span class="block mt-1 font-normal">
+                                    Alasan: {{ $sale->cancel_note }}
+                                </span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 {{-- cashier redundant name display --}}

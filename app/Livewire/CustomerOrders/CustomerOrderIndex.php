@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+use App\Models\Sale;
+use App\Models\StockMovement;
+use Illuminate\Support\Facades\DB;
+
 class CustomerOrderIndex extends Component
 {
     use WithPagination;
@@ -24,6 +28,14 @@ class CustomerOrderIndex extends Component
 
     public array $detailOrder = [];
 
+    public bool $showCancelModal = false;
+
+    public ?int $cancelOrderId = null;
+
+    public ?string $cancelReason = null;
+
+    public ?array $cancelOrderPreview = null;
+
     public ?string $rejectionNote = null;
 
     protected string $paginationTheme = 'tailwind';
@@ -32,7 +44,7 @@ class CustomerOrderIndex extends Component
     {
         return view('livewire.customer-orders.customer-order-index', [
             'orders' => CustomerOrder::query()
-                ->with(['items.product', 'customer', 'converter', 'rejecter', 'canceller'])
+                ->with(['items.product', 'customer', 'converter', 'rejecter', 'canceller', 'sale.items.product'])
                 ->when($this->search, function ($query) {
                     $query->where(function ($orderQuery) {
                         $orderQuery->where('order_number', 'like', '%' . $this->search . '%')
@@ -131,6 +143,144 @@ class CustomerOrderIndex extends Component
         $this->resetValidation();
 
         $this->showRejectModal = true;
+    }
+
+    public function openCancelModal(int $orderId): void
+    {
+        $order = CustomerOrder::query()
+            ->with('sale')
+            ->findOrFail($orderId);
+
+        if ($order->status !== 'converted') {
+            Session::flash('error', 'Hanya order converted yang dapat dibatalkan.');
+            return;
+        }
+
+        if (! $order->sale) {
+            Session::flash('error', 'Transaksi POS untuk order ini tidak ditemukan.');
+            return;
+        }
+
+        if ($order->sale->status === 'cancelled') {
+            Session::flash('error', 'Transaksi ini sudah pernah dibatalkan.');
+            return;
+        }
+
+        $this->cancelOrderId = $order->id;
+        $this->cancelReason = null;
+
+        $this->cancelOrderPreview = [
+            'order_number' => $order->order_number,
+            'invoice_number' => $order->sale->invoice_number,
+            'customer_name' => $order->customer_name,
+            'grand_total' => (float) $order->sale->grand_total,
+        ];
+
+        $this->resetValidation();
+
+        $this->showCancelModal = true;
+    }
+
+    public function cancelConvertedOrder(): void
+    {
+        $this->validate([
+            'cancelReason' => ['required', 'string', 'min:5', 'max:1000'],
+        ], [
+            'cancelReason.required' => 'Alasan pembatalan wajib diisi.',
+            'cancelReason.min' => 'Alasan pembatalan minimal 5 karakter.',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $order = CustomerOrder::query()
+                ->with(['sale.items.product', 'sale.customer'])
+                ->lockForUpdate()
+                ->findOrFail($this->cancelOrderId);
+
+            if ($order->status !== 'converted') {
+                throw new \Exception('Hanya order converted yang dapat dibatalkan.');
+            }
+
+            $sale = $order->sale;
+
+            if (! $sale) {
+                throw new \Exception('Transaksi POS untuk order ini tidak ditemukan.');
+            }
+
+            if ($sale->status === 'cancelled') {
+                throw new \Exception('Transaksi ini sudah pernah dibatalkan.');
+            }
+
+            $customerName = $order->customer_name ?: ($sale->customer?->name ?? 'Customer');
+            $movementNote = "{$sale->invoice_number} - {$customerName} - {$this->cancelReason}";
+
+            foreach ($sale->items as $item) {
+                $product = $item->product;
+
+                if (! $product) {
+                    continue;
+                }
+
+                $product->refresh();
+
+                $stockBefore = (int) $product->stock;
+                $quantityReturn = (int) $item->quantity;
+                $stockAfter = $stockBefore + $quantityReturn;
+
+                $averageCost = (float) $product->average_cost;
+
+                $product->update([
+                    'stock' => $stockAfter,
+                ]);
+
+                StockMovement::query()->create([
+                    'product_id' => $product->id,
+                    'type' => 'order_cancel',
+                    'reference_type' => Sale::class,
+                    'reference_id' => $sale->id,
+                    'quantity_in' => $quantityReturn,
+                    'quantity_out' => 0,
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'average_cost_before' => $averageCost,
+                    'average_cost_after' => $averageCost,
+                    'note' => $movementNote,
+                    'created_by' => Auth::id(),
+                ]);
+            }
+
+            $sale->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'cancelled_by' => Auth::id(),
+                'cancel_note' => $this->cancelReason,
+            ]);
+
+            $order->update([
+                'status' => 'cancelled',
+                'cancelled_at' => now(),
+                'cancelled_by' => Auth::id(),
+                'cancel_note' => $this->cancelReason,
+            ]);
+
+            DB::commit();
+
+            Session::flash('success', 'Order converted berhasil dibatalkan dan stok telah dikembalikan.');
+
+            $this->showCancelModal = false;
+            $this->cancelOrderId = null;
+            $this->cancelReason = null;
+            $this->cancelOrderPreview = null;
+
+            $this->dispatch('$refresh');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Session::flash('error', $e->getMessage());
+
+            $this->showCancelModal = false;
+        }
     }
 
     public function rejectOrder(): void

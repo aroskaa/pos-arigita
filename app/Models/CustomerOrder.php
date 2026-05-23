@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CustomerOrder extends Model
 {
@@ -63,8 +64,8 @@ class CustomerOrder extends Model
         return $this->belongsTo(User::class, 'cancelled_by');
     }
 
-    public function sale(): HasMany
+    public function sale(): HasOne
     {
-        return $this->hasMany(Sale::class);
+        return $this->hasOne(Sale::class);
     }
 }
