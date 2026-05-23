@@ -153,6 +153,20 @@ class CustomerOrderCreate extends Component
             'cart.min' => 'Minimal satu produk harus dipilih.',
         ]);
 
+        $recentOrder = CustomerOrder::query()
+            ->where('customer_phone', $this->customerPhone)
+            ->where('created_at', '>=', now()->subMinutes(2))
+            ->exists();
+
+        if ($recentOrder) {
+            $this->addError(
+                'submit',
+                'Order dari nomor HP ini baru saja dikirim. Mohon tunggu sekitar 2 menit sebelum mengirim order kembali.'
+            );
+
+            return;
+        }
+
         DB::beginTransaction();
 
         try {

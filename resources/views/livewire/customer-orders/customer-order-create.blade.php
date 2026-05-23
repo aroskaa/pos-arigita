@@ -103,19 +103,25 @@
                         Ringkasan Order
                     </h2>
 
-                    <p class="mt-1 text-sm text-slate-500">
+                    {{-- <p class="mt-1 text-sm text-slate-500">
                         Order belum mengurangi stok sebelum diproses admin.
-                    </p>
+                    </p> --}}
                 </div>
 
                 @if ($showSuccess)
                     <div class="mt-5 rounded-2xl bg-green-50 p-4 text-sm text-green-700">
                         <p class="font-bold">Order berhasil dikirim.</p>
+
                         <p class="mt-1">
                             Nomor order: {{ $createdOrderNumber }}
                         </p>
-                        <p class="mt-1">
-                            Admin akan memeriksa dan memproses pesanan Anda.
+
+                        <p class="mt-2">
+                            Terima kasih. Mohon tunggu, admin kami akan menghubungi Anda dalam beberapa menit untuk konfirmasi pesanan.
+                        </p>
+
+                        <p class="mt-2 text-xs text-green-600">
+                            Untuk mencegah duplikasi order, mohon tidak mengirim pesanan yang sama berulang kali dalam waktu dekat.
                         </p>
                     </div>
                 @endif
@@ -299,9 +305,16 @@
                         type="button"
                         wire:click="submitOrder"
                         wire:loading.attr="disabled"
-                        class="w-full rounded-2xl bg-blue-600 px-5 py-4 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50"
+                        wire:target="submitOrder"
+                        class="w-full rounded-2xl bg-blue-600 px-5 py-4 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        Kirim Order
+                        <span wire:loading.remove wire:target="submitOrder">
+                            Kirim Order
+                        </span>
+
+                        <span wire:loading wire:target="submitOrder">
+                            Mengirim Order...
+                        </span>
                     </button>
                 </div>
             </div>

@@ -15,7 +15,7 @@ Route::get('/dashboard', function () {
 
 Route::get('/order', function () {
     return view('pages.customer-orders.create');
-})->name('customer-orders.create');
+})->middleware('customer.order.limit')->name('customer-orders.create');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', DashboardController::class)

@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
         ]);
+        
+        $middleware->alias([
+            'customer.order.limit' => \App\Http\Middleware\CustomerOrderRateLimit::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
