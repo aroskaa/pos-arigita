@@ -52,6 +52,12 @@
                         <span>🧾</span>
                         <span>Riwayat Transaksi</span>
                     </a>
+
+                    <a href="{{ route('suppliers.index') }}"
+                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('suppliers.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                        <span>🚚</span>
+                        <span>Supplier</span>
+                    </a>
                 @endif
             </nav>
 

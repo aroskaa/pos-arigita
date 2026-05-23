@@ -21,18 +21,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/admin/products', function () {
             return view('pages.products.index');
         })->name('products.index');
+
+        Route::get('/reports', function () {
+            return view('pages.reports.index');
+        })->name('reports.index');
+
+        Route::get('/suppliers', function () {
+            return view('pages.suppliers.index');
+        })->name('suppliers.index');
     });
 
     Route::middleware('role:owner,admin,cashier')->group(function () {
         Route::get('/pos', function () {
             return view('pages.pos.index');
         })->name('pos.index');
-    });
-
-    Route::middleware('role:owner,admin')->group(function () {
-        Route::get('/reports', function () {
-            return view('pages.reports.index');
-        })->name('reports.index');
     });
     
     Route::get('/sales', [SaleController::class, 'index'])
