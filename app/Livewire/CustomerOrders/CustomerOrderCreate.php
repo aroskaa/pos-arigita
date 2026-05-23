@@ -25,6 +25,8 @@ class CustomerOrderCreate extends Component
 
     public ?string $note = null;
 
+    public int $customerFormKey = 0;
+
     public bool $showSuccess = false;
 
     public ?string $createdOrderNumber = null;
@@ -218,7 +220,6 @@ class CustomerOrderCreate extends Component
             $this->reset([
                 'search',
                 'cart',
-                'customerType',
                 'customerName',
                 'customerPhone',
                 'customerAddress',
@@ -226,6 +227,9 @@ class CustomerOrderCreate extends Component
             ]);
 
             $this->customerType = 'personal';
+            $this->customerFormKey++;
+
+            $this->dispatch('clear-customer-order-form');
         } catch (\Throwable $e) {
             DB::rollBack();
 

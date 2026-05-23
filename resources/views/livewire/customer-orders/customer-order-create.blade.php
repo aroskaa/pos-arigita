@@ -126,12 +126,6 @@
                     </div>
                 @endif
 
-                @error('submit')
-                    <div class="mt-5 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
-                        {{ $message }}
-                    </div>
-                @enderror
-
                 <div class="mt-5 max-h-[320px] space-y-4 overflow-y-auto pr-2">
                     @forelse ($cart as $item)
                         <div
@@ -222,13 +216,17 @@
                     </div>
                 </div>
 
-                <div class="mt-6 space-y-4 border-t border-slate-100 pt-5">
+                <div
+                    class="mt-6 space-y-4 border-t border-slate-100 pt-5"
+                    wire:key="customer-order-form-{{ $customerFormKey }}"
+                >
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Tipe Pelanggan
                         </label>
 
                         <select
+                            data-customer-order-input
                             wire:model.live="customerType"
                             class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         >
@@ -243,6 +241,7 @@
                         </label>
 
                         <input
+                            data-customer-order-input
                             type="text"
                             wire:model.live="customerName"
                             class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -259,6 +258,7 @@
                         </label>
 
                         <input
+                            data-customer-order-input
                             type="text"
                             inputmode="numeric"
                             wire:model.live="customerPhone"
@@ -277,6 +277,7 @@
                         </label>
 
                         <textarea
+                            data-customer-order-input
                             wire:model.live="customerAddress"
                             rows="3"
                             placeholder="Opsional, isi jika perlu pengiriman."
@@ -294,6 +295,7 @@
                         </label>
 
                         <textarea
+                            data-customer-order-input
                             wire:model.live="note"
                             rows="3"
                             placeholder="Contoh: dikirim siang, ambil sendiri, dan sebagainya."
@@ -317,12 +319,31 @@
                         </span>
                     </button>
                 </div>
+
+                @error('submit')
+                    <div class="mt-5 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+                        {{ $message }}
+                    </div>
+                @enderror
+                
             </div>
         </aside>
     </main>
 
     <script>
         document.addEventListener('livewire:init', () => {
+            Livewire.on('clear-customer-order-form', () => {
+                setTimeout(() => {
+                    document.querySelectorAll('[data-customer-order-input]').forEach((input) => {
+                        if (input.tagName === 'SELECT') {
+                            input.value = 'personal';
+                        } else {
+                            input.value = '';
+                        }
+                    });
+                }, 100);
+            });
+
             Livewire.on('focus-customer-order-quantity', (event) => {
                 const productId = event.productId;
 
