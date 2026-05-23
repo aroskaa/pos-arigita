@@ -29,6 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/suppliers', function () {
             return view('pages.suppliers.index');
         })->name('suppliers.index');
+
+        Route::get('/purchases', function () {
+            return view('pages.purchases.index');
+        })->name('purchases.index');
     });
 
     Route::middleware('role:owner,admin,cashier')->group(function () {

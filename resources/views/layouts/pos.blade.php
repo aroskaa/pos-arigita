@@ -58,6 +58,12 @@
                         <span>🚚</span>
                         <span>Supplier</span>
                     </a>
+
+                    <a href="{{ route('purchases.index') }}"
+                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('purchases.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                        <span>📥</span>
+                        <span>Pembelian</span>
+                    </a>
                 @endif
             </nav>
 
