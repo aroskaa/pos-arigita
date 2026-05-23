@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
-// use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\StockDailyRecapPdfController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -37,6 +37,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/stock-movements', function () {
             return view('pages.stock-movements.index');
         })->name('stock-movements.index');
+
+        Route::get('/stock-daily-recaps', function () {
+            return view('pages.stock-daily-recaps.index');
+        })->name('stock-daily-recaps.index');
+
+        Route::get('/stock-daily-recaps/download', StockDailyRecapPdfController::class)
+            ->name('stock-daily-recaps.download');
     });
 
     Route::middleware('role:owner,admin,cashier')->group(function () {
