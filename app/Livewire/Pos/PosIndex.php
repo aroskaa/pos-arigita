@@ -518,7 +518,7 @@ class PosIndex extends Component
             return;
         }
 
-        Session::flash('success', "Order {$order->order_number} berhasil dimuat ke POS.");
+        // Session::flash('success', "Order {$order->order_number} berhasil dimuat ke POS.");
     }
 
     #[On('barcode-scanned')]

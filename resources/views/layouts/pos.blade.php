@@ -10,7 +10,7 @@
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
     <div class="min-h-screen flex">
-        <aside class="hidden lg:flex lg:w-72 lg:flex-col bg-white border-r border-slate-200">
+        <aside class="hidden lg:flex lg:w-72 lg:flex-col bg-white border-r border-slate-200 overflow-y-auto">
             <div class="h-20 flex items-center gap-3 px-6 border-b border-slate-100">
                 <div class="h-11 w-11 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold">
                     AG
@@ -21,73 +21,133 @@
                 </div>
             </div>
 
-            <nav class="flex-1 px-4 py-6 space-y-2">
-                <a href="{{ route('dashboard') }}"
-                    class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                    <span>🏠</span>
-                    <span>Dashboard</span>
-                </a>
+            <nav class="mt-8 space-y-7 px-4">
+                {{-- UTAMA --}}
+                <div>
+                    <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        Utama
+                    </p>
+
+                    <div class="space-y-1">
+                        <a href="{{ route('dashboard') }}"
+                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                            <span>🏠</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- TRANSAKSI --}}
+                <div>
+                    <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        Transaksi
+                    </p>
+
+                    <div class="space-y-1">
+                        @if(auth()->user()->hasRole(['owner', 'admin', 'cashier']))
+                            <a href="{{ route('pos.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>🧾</span>
+                                <span>POS Transaksi</span>
+                            </a>
+                        @endif
+
+                        @if(auth()->user()->hasRole(['owner', 'admin']))
+                            <a href="{{ route('customer-orders.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('customer-orders.index') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>🛒</span>
+                                <span>Order Pelanggan</span>
+                            </a>
+                        @endif
+
+                        <a href="{{ route('sales.index') }}"
+                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                {{ request()->routeIs('sales.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                            <span>📄</span>
+                            <span>Riwayat Transaksi</span>
+                        </a>
+                    </div>
+                </div>
 
                 @if(auth()->user()->hasRole(['owner', 'admin']))
-                    <a href="{{ route('pos.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>🧾</span>
-                        <span>POS Transaksi</span>
-                    </a>
+                    {{-- MASTER DATA --}}
+                    <div>
+                        <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Master Data
+                        </p>
 
-                    <a href="{{ route('customer-orders.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('customer-orders.index') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>🛒</span>
-                        <span>Order Pelanggan</span>
-                    </a>
-                
-                    <a href="{{ route('products.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('products.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>📦</span>
-                        <span>Produk & Stok</span>
-                    </a>
+                        <div class="space-y-1">
+                            <a href="{{ route('products.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('products.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>📦</span>
+                                <span>Produk & Stok</span>
+                            </a>
 
-                    <a href="{{ route('reports.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('reports.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>📊</span>
-                        <span>Laporan</span>
-                    </a>
+                            <a href="{{ route('suppliers.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('suppliers.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>🚚</span>
+                                <span>Supplier</span>
+                            </a>
 
-                    <a href="{{ route('sales.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('sales.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>🧾</span>
-                        <span>Riwayat Transaksi</span>
-                    </a>
+                            <a href="{{ route('purchases.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('purchases.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>📥</span>
+                                <span>Pembelian</span>
+                            </a>
+                        </div>
+                    </div>
 
-                    <a href="{{ route('suppliers.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('suppliers.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>🚚</span>
-                        <span>Supplier</span>
-                    </a>
+                    {{-- PERSEDIAAN --}}
+                    <div>
+                        <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Persediaan
+                        </p>
 
-                    <a href="{{ route('purchases.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('purchases.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>📥</span>
-                        <span>Pembelian</span>
-                    </a>
+                        <div class="space-y-1">
+                            <a href="{{ route('stock-movements.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('stock-movements.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>📋</span>
+                                <span>Kartu Stok</span>
+                            </a>
 
-                    <a href="{{ route('stock-movements.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('stock-movements.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>📋</span>
-                        <span>Kartu Stok</span>
-                    </a>
+                            <a href="{{ route('stock-adjustments.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('stock-adjustments.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>🛠️</span>
+                                <span>Stock Adjustment</span>
+                            </a>
 
-                    <a href="{{ route('stock-adjustments.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('stock-adjustments.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>🛠️</span>
-                        <span>Stock Adjustment</span>
-                    </a>
+                            <a href="{{ route('stock-daily-recaps.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('stock-daily-recaps.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>🧮</span>
+                                <span>Rekap Stok</span>
+                            </a>
+                        </div>
+                    </div>
 
-                    <a href="{{ route('stock-daily-recaps.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('stock-daily-recaps.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
-                        <span>🧮</span>
-                        <span>Rekap Stok</span>
-                    </a>
+                    {{-- ANALITIK --}}
+                    <div>
+                        <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Analitik
+                        </p>
+
+                        <div class="space-y-1">
+                            <a href="{{ route('reports.index') }}"
+                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                    {{ request()->routeIs('reports.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                <span>📊</span>
+                                <span>Laporan</span>
+                            </a>
+                        </div>
+                    </div>
                 @endif
             </nav>
 

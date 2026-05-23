@@ -18,6 +18,8 @@ class SaleController extends Controller
             'cashier',
             'customer',
             'items.product',
+            'customerOrder',
+            'canceller',
         ]);
 
         return view('pages.sales.show', compact('sale'));

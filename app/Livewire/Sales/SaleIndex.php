@@ -33,7 +33,7 @@ class SaleIndex extends Component
                     $query->whereDate('sale_date', '<=', $this->endDate);
                 })
                 ->latest()
-                ->paginate(10),
+                ->paginate(7),
 
             'todaySales' => Sale::query()
                 ->where('status', '!=', 'cancelled')

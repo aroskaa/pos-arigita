@@ -9,37 +9,56 @@
 
     <div class="mx-auto max-w-5xl">
         <div class="print-invoice rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-            <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                    <h2 class="text-3xl font-bold text-slate-900">
-                        {{ $sale->invoice_number }}
-                    </h2>
+            <div>
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900">
+                            {{ $sale->invoice_number }}
+                        </h2>
 
-                    <p class="mt-2 text-sm text-slate-500">
-                        {{ $sale->sale_date->format('d M Y H:i') }}
-                    </p>
+                        <p class="mt-2 text-sm text-slate-500">
+                            {{ $sale->sale_date->format('d M Y H:i') }}
+                        </p>
+                    </div>
 
-                    @if ($sale->status === 'cancelled')
-                        <div class="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                            Invoice ini telah dibatalkan.
+                    @if ($sale->customerOrder)
+                        <div class="w-full rounded-2xl bg-blue-50 px-4 py-3 text-left text-sm text-blue-700 md:w-auto md:max-w-sm md:text-right">
+                            <p class="font-semibold">
+                                Website Order Pelanggan
+                            </p>
 
-                            @if ($sale->cancel_note)
-                                <span class="mt-1 block font-normal">
-                                    Alasan: {{ $sale->cancel_note }}
+                            <p class="mt-1">
+                                Nomor Order:
+                                <span class="font-bold">
+                                    {{ $sale->customerOrder->order_number }}
                                 </span>
-                            @endif
-
-                            @if ($sale->canceller || $sale->cancelled_at)
-                                <span class="mt-1 block font-bold">
-                                    Dibatalkan oleh {{ $sale->canceller?->name ?? '-' }}
-                                    pada {{ $sale->cancelled_at?->format('d M Y H:i') ?? '-' }}.
-                                </span>
-                            @endif
+                            </p>
                         </div>
                     @endif
                 </div>
 
+                @if ($sale->status === 'cancelled')
+                    <div class="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                        Invoice ini telah dibatalkan.
+
+                        @if ($sale->cancel_note)
+                            <span class="mt-1 block font-normal">
+                                Alasan: {{ $sale->cancel_note }}
+                            </span>
+                        @endif
+
+                        @if ($sale->canceller || $sale->cancelled_at)
+                            <span class="mt-1 block font-bold">
+                                Dibatalkan oleh {{ $sale->canceller?->name ?? '-' }}
+                                pada {{ $sale->cancelled_at?->format('d M Y H:i') ?? '-' }}.
+                            </span>
+                        @endif
+                    </div>
+                @endif
+
                 {{-- cashier redundant name display --}}
+            </div>
+            
                 {{-- <div class="text-left lg:text-right">
                     <p class="text-sm text-slate-500">
                         Kasir
@@ -49,7 +68,6 @@
                         {{ $sale->cashier->name }}
                     </h3>
                 </div> --}}
-            </div>
 
             <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
@@ -160,10 +178,16 @@
                             Grand Total
                         </span>
 
-                        <span class="text-2xl font-bold text-blue-700">
+                        <span class="{{ $sale->status === 'cancelled' ? 'text-red-600 line-through' : 'text-slate-900' }}">
                             Rp {{ number_format($sale->grand_total, 0, ',', '.') }}
                         </span>
                     </div>
+
+                    @if ($sale->status === 'cancelled')
+                        <p class="mt-2 text-xs font-semibold text-red-600">
+                            Nominal invoice ini tidak dihitung sebagai pendapatan aktif karena transaksi telah dibatalkan.
+                        </p>
+                    @endif
                 </div>
             </div>
 

@@ -110,6 +110,12 @@
                                 <span class="{{ $sale->status === 'cancelled' ? 'text-red-600 line-through' : 'text-slate-900' }}">
                                     Rp {{ number_format($sale->grand_total, 0, ',', '.') }}
                                 </span>
+
+                                @if ($sale->status === 'cancelled')
+                                    <p class="mt-1 text-xs font-semibold text-red-600">
+                                        Tidak dihitung
+                                    </p>
+                                @endif
                             </td>
 
                             <td class="px-4 py-4 text-right">

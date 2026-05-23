@@ -257,6 +257,20 @@
                         </div>
                     </div>
 
+                    @if (! empty($detailOrder['converted_at']))
+                        <div class="mt-4 rounded-2xl bg-blue-50 p-4">
+                            <p class="text-xs font-semibold uppercase text-blue-500">
+                                Informasi Konversi POS
+                            </p>
+
+                            <p class="mt-1 text-sm text-blue-900">
+                                Order ini telah diproses menjadi transaksi POS
+                                oleh <span class="font-bold">{{ $detailOrder['converted_by'] ?? '-' }}</span>
+                                pada <span class="font-bold">{{ $detailOrder['converted_at'] }}</span>.
+                            </p>
+                        </div>
+                    @endif
+
                     @if (! empty($detailOrder['customer_address']))
                         <div class="mt-4 rounded-2xl bg-slate-50 p-4">
                             <p class="text-xs font-semibold uppercase text-slate-400">Alamat</p>
