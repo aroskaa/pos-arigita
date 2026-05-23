@@ -28,14 +28,24 @@ class PurchaseIndex extends Component
     public ?string $note = null;
 
     public ?int $selectedProductId = null;
+    
+    public string $productSearch = '';
+
+    public ?array $selectedProduct = null;
+
+    public bool $showDetailModal = false;
+
+    public array $detailPurchase = [];
 
     public int $quantity = 1;
 
-    public int|float|string|null $unit_cost = null;
+    public ?string $unit_cost = null;
 
     public array $items = [];
 
     protected string $paginationTheme = 'tailwind';
+
+    
 
     public function mount(): void
     {
@@ -61,9 +71,17 @@ class PurchaseIndex extends Component
                 ->orderBy('name')
                 ->get(),
 
-            'products' => Product::query()
+            'productSuggestions' => Product::query()
                 ->where('is_active', true)
+                ->when($this->productSearch, function ($query) {
+                    $query->where(function ($productQuery) {
+                        $productQuery->where('name', 'like', '%' . $this->productSearch . '%')
+                            ->orWhere('sku', 'like', '%' . $this->productSearch . '%')
+                            ->orWhere('barcode', 'like', '%' . $this->productSearch . '%');
+                    });
+                })
                 ->orderBy('name')
+                ->limit(8)
                 ->get(),
 
             'totalAmount' => $this->totalAmount(),
@@ -82,25 +100,76 @@ class PurchaseIndex extends Component
         $this->showModal = true;
     }
 
+    public function selectProduct(int $productId): void
+    {
+        $product = Product::query()->findOrFail($productId);
+
+        $this->selectedProductId = $product->id;
+
+        $this->selectedProduct = [
+            'id' => $product->id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'stock' => $product->stock,
+        ];
+
+        $this->productSearch = $product->name;
+
+        $this->dispatch('focus-purchase-qty');
+    }
+
+    public function selectFirstProduct(): void
+    {
+        if (! $this->productSearch) {
+            return;
+        }
+
+        $product = Product::query()
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->where('name', 'like', '%' . $this->productSearch . '%')
+                    ->orWhere('sku', 'like', '%' . $this->productSearch . '%')
+                    ->orWhere('barcode', 'like', '%' . $this->productSearch . '%');
+            })
+            ->orderBy('name')
+            ->first();
+
+        if (! $product) {
+            $this->addError('selectedProductId', 'Produk tidak ditemukan.');
+            return;
+        }
+
+        $this->selectProduct($product->id);
+    }
+
     public function addItem(): void
     {
+        $this->resetErrorBag([
+            'selectedProductId',
+            'quantity',
+            'unit_cost',
+        ]);
+
         $this->validate([
             'selectedProductId' => ['required', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1'],
-            'unit_cost' => ['required', 'numeric', 'min:0'],
         ], [
             'selectedProductId.required' => 'Produk wajib dipilih.',
             'quantity.required' => 'Jumlah pembelian wajib diisi.',
             'quantity.min' => 'Jumlah pembelian minimal 1.',
-            'unit_cost.required' => 'Harga beli wajib diisi.',
-            'unit_cost.numeric' => 'Harga beli harus berupa angka.',
         ]);
+
+        $unitCost = $this->currencyToNumber($this->unit_cost);
+
+        if ($unitCost <= 0) {
+            $this->addError('unit_cost', 'Harga beli wajib diisi.');
+            return;
+        }
 
         $product = Product::query()->findOrFail($this->selectedProductId);
 
         $productId = $product->id;
         $quantity = (int) $this->quantity;
-        $unitCost = (float) $this->unit_cost;
 
         if (isset($this->items[$productId])) {
             $this->items[$productId]['quantity'] += $quantity;
@@ -118,13 +187,44 @@ class PurchaseIndex extends Component
         }
 
         $this->selectedProductId = null;
+        $this->selectedProduct = null;
+        $this->productSearch = '';
         $this->quantity = 1;
         $this->unit_cost = null;
+
+        $this->dispatch('focus-purchase-product');
     }
 
     public function removeItem(int $productId): void
     {
         unset($this->items[$productId]);
+    }
+    
+    public function openDetail(int $purchaseId): void
+    {
+        $purchase = Purchase::query()
+            ->with(['supplier', 'creator', 'items.product'])
+            ->findOrFail($purchaseId);
+
+        $this->detailPurchase = [
+            'invoice_number' => $purchase->invoice_number,
+            'supplier' => $purchase->supplier?->name ?? 'Tanpa Supplier',
+            'purchase_date' => $purchase->purchase_date->format('d M Y'),
+            'creator' => $purchase->creator->name,
+            'total_amount' => (float) $purchase->total_amount,
+            'note' => $purchase->note,
+            'items' => $purchase->items->map(function ($item) {
+                return [
+                    'product_name' => $item->product->name,
+                    'sku' => $item->product->sku,
+                    'quantity' => $item->quantity,
+                    'unit_cost' => (float) $item->unit_cost,
+                    'subtotal' => (float) $item->subtotal,
+                ];
+            })->toArray(),
+        ];
+
+        $this->showDetailModal = true;
     }
 
     public function savePurchase(): void
@@ -227,6 +327,11 @@ class PurchaseIndex extends Component
         return collect($this->items)->sum('subtotal');
     }
 
+    private function currencyToNumber(?string $value): int
+    {
+        return (int) preg_replace('/\D/', '', (string) $value);
+    }
+
     private function generatePurchaseInvoiceNumber(): string
     {
         $date = now()->format('Ymd');
@@ -252,12 +357,14 @@ class PurchaseIndex extends Component
     private function resetForm(): void
     {
         $this->reset([
-            'supplier_id',
-            'note',
-            'selectedProductId',
-            'unit_cost',
-            'items',
-        ]);
+        'supplier_id',
+        'note',
+        'selectedProductId',
+        'selectedProduct',
+        'productSearch',
+        'unit_cost',
+        'items',
+    ]);
 
         $this->purchase_date = now()->format('Y-m-d');
         $this->quantity = 1;
