@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
+use App\Models\CustomerOrder;
+
 class PosIndex extends Component
 {
     public string $search = '';
@@ -31,6 +33,12 @@ class PosIndex extends Component
 
     public ?int $selectedCustomerId = null;
     // public ?string $customerSearch = null;
+
+    public ?int $loadedCustomerOrderId = null;
+
+    public ?string $loadedCustomerOrderNumber = null;
+
+    public array $orderLoadWarnings = [];
 
     public int $customerFormKey = 0;
 
@@ -63,6 +71,15 @@ class PosIndex extends Component
 
             'subtotal' => $this->subtotal(),
         ]);
+    }
+
+    public function mount(): void
+    {
+        $customerOrderId = request()->query('customer_order');
+
+        if ($customerOrderId) {
+            $this->loadCustomerOrderToCart((int) $customerOrderId);
+        }
     }
 
     public function addToCart(int $productId): void
@@ -290,20 +307,18 @@ class PosIndex extends Component
             $sale = Sale::query()->create([
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'customer_id' => $customerId,
+                'customer_order_id' => $this->loadedCustomerOrderId,
                 'cashier_id' => Auth::id(),
                 'sale_date' => now(),
-
-                'subtotal' => $subtotal,
+                'subtotal' => $this->subtotal(),
                 'discount_total' => 0,
-                'grand_total' => $subtotal,
-
-                'paid_amount' => $subtotal,
+                'grand_total' => $this->subtotal(),
+                'paid_amount' => $this->subtotal(),
                 'change_amount' => 0,
-
                 'payment_method' => 'cash',
                 'status' => 'completed',
+                'note' => null,
             ]);
-
             foreach ($this->cart as $item) {
                 $product = Product::query()
                     ->lockForUpdate()
@@ -350,6 +365,17 @@ class PosIndex extends Component
                 ]);
             }
 
+            if ($this->loadedCustomerOrderId) {
+                CustomerOrder::query()
+                    ->where('id', $this->loadedCustomerOrderId)
+                    ->where('status', 'pending')
+                    ->update([
+                        'status' => 'converted',
+                        'converted_at' => now(),
+                        'converted_by' => Auth::id(),
+                    ]);
+            }
+
             DB::commit();
 
             // $this->dispatch('focus-quantity', productId: $product->id);
@@ -364,6 +390,12 @@ class PosIndex extends Component
             );
 
             $this->resetCustomer();
+
+            $this->reset([
+                'loadedCustomerOrderId',
+                'loadedCustomerOrderNumber',
+                'orderLoadWarnings',
+            ]);
 
             $this->customerType = 'personal';
 
@@ -421,6 +453,72 @@ class PosIndex extends Component
         $this->refreshCartItemPrice($productId);
 
         $this->dispatch('$refresh');
+    }
+
+    public function loadCustomerOrderToCart(int $customerOrderId): void
+    {
+        $order = CustomerOrder::query()
+            ->with(['items.product.unit', 'items.product.prices', 'customer'])
+            ->findOrFail($customerOrderId);
+
+        if ($order->status !== 'pending') {
+            Session::flash('error', 'Order pelanggan ini tidak dapat diproses karena statusnya bukan pending.');
+            return;
+        }
+
+        $this->clearCart();
+
+        $this->loadedCustomerOrderId = $order->id;
+        $this->loadedCustomerOrderNumber = $order->order_number;
+        $this->orderLoadWarnings = [];
+
+        $this->selectedCustomerId = $order->customer_id;
+        $this->customerType = $order->customer_type;
+        $this->customerName = $order->customer_name;
+        $this->customerPhone = $order->customer_phone;
+        $this->customerAddress = $order->customer_address;
+        $this->customerNote = $order->note;
+
+        foreach ($order->items as $orderItem) {
+            $product = $orderItem->product;
+
+            if (! $product || ! $product->is_active) {
+                $this->orderLoadWarnings[] = "Produk pada order tidak aktif atau tidak ditemukan.";
+                continue;
+            }
+
+            if ($product->stock <= 0) {
+                $this->orderLoadWarnings[] = "{$product->name} tidak dimasukkan ke cart karena stok kosong.";
+                continue;
+            }
+
+            $requestedQuantity = (int) $orderItem->quantity;
+            $cartQuantity = min($requestedQuantity, (int) $product->stock);
+
+            if ($requestedQuantity > $product->stock) {
+                $this->orderLoadWarnings[] = "{$product->name}: qty order {$requestedQuantity}, stok tersedia {$product->stock}. Qty cart disesuaikan menjadi {$cartQuantity}.";
+            }
+
+            $price = $product->getPriceForQuantity($cartQuantity);
+
+            $this->cart[$product->id] = [
+                'product_id' => $product->id,
+                'name' => $product->name,
+                'sku' => $product->sku,
+                'unit' => $product->unit?->abbreviation,
+                'stock' => $product->stock,
+                'quantity' => $cartQuantity,
+                'unit_price' => $price,
+                'subtotal' => $cartQuantity * $price,
+            ];
+        }
+
+        if (count($this->cart) === 0) {
+            Session::flash('error', 'Tidak ada item order yang dapat dimasukkan ke POS karena stok tidak tersedia.');
+            return;
+        }
+
+        Session::flash('success', "Order {$order->order_number} berhasil dimuat ke POS.");
     }
 
     #[On('barcode-scanned')]

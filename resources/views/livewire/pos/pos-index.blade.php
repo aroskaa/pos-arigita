@@ -24,6 +24,36 @@
                     class="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 >
 
+                @if ($loadedCustomerOrderId)
+                    <div class="mt-4 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3">
+                        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <p class="text-sm font-bold text-blue-900">
+                                    Order pelanggan sedang diproses
+                                </p>
+
+                                <p class="text-xs text-blue-700">
+                                    Nomor Order: {{ $loadedCustomerOrderNumber }}
+                                </p>
+                            </div>
+
+                            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-blue-700">
+                                Loaded to POS
+                            </span>
+                        </div>
+                    </div>
+                @endif
+
+                @if (! empty($orderLoadWarnings))
+                    <div class="mt-4 space-y-2">
+                        @foreach ($orderLoadWarnings as $warning)
+                            <div class="rounded-2xl bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                                {{ $warning }}
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
                 @if (session()->has('error'))
                     <div class="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">
                         {{ session('error') }}
