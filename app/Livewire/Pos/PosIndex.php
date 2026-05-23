@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\StockMovement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -324,7 +325,29 @@ class PosIndex extends Component
                     'subtotal' => $item['subtotal'],
                 ]);
 
-                $product->decrement('stock', $item['quantity']);
+                $stockBefore = (int) $product->stock;
+                $averageCostBefore = (float) $product->average_cost;
+
+                $stockAfter = $stockBefore - (int) $item['quantity'];
+
+                $product->update([
+                    'stock' => $stockAfter,
+                ]);
+
+                StockMovement::query()->create([
+                    'product_id' => $product->id,
+                    'type' => 'sale',
+                    'reference_type' => Sale::class,
+                    'reference_id' => $sale->id,
+                    'quantity_in' => 0,
+                    'quantity_out' => (int) $item['quantity'],
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'average_cost_before' => $averageCostBefore,
+                    'average_cost_after' => $averageCostBefore,
+                    'note' => 'Penjualan produk melalui POS.',
+                    'created_by' => Auth::id(),
+                ]);
             }
 
             DB::commit();

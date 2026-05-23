@@ -33,6 +33,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/purchases', function () {
             return view('pages.purchases.index');
         })->name('purchases.index');
+
+        Route::get('/stock-movements', function () {
+            return view('pages.stock-movements.index');
+        })->name('stock-movements.index');
     });
 
     Route::middleware('role:owner,admin,cashier')->group(function () {

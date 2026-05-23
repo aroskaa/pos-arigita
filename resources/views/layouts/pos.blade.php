@@ -64,6 +64,12 @@
                         <span>📥</span>
                         <span>Pembelian</span>
                     </a>
+
+                    <a href="{{ route('stock-movements.index') }}"
+                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium {{ request()->routeIs('stock-movements.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50' }}">
+                        <span>📋</span>
+                        <span>Kartu Stok</span>
+                    </a>
                 @endif
             </nav>
 
