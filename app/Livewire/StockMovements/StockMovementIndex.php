@@ -17,6 +17,10 @@ class StockMovementIndex extends Component
 
     public string $type = '';
 
+    public ?string $startDate = null;
+
+    public ?string $endDate = null;
+
     protected string $paginationTheme = 'tailwind';
 
     public function render()
@@ -36,6 +40,12 @@ class StockMovementIndex extends Component
                 })
                 ->when($this->type, function ($query) {
                     $query->where('type', $this->type);
+                })
+                ->when($this->startDate, function ($query) {
+                    $query->whereDate('created_at', '>=', $this->startDate);
+                })
+                ->when($this->endDate, function ($query) {
+                    $query->whereDate('created_at', '<=', $this->endDate);
                 })
                 ->latest()
                 ->paginate(15),
@@ -70,12 +80,24 @@ class StockMovementIndex extends Component
         $this->resetPage();
     }
 
+    public function updatedStartDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDate(): void
+    {
+        $this->resetPage();
+    }
+
     public function resetFilters(): void
     {
         $this->reset([
             'search',
             'productId',
             'type',
+            'startDate',
+            'endDate',
         ]);
 
         $this->resetPage();

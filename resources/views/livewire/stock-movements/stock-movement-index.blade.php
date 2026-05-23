@@ -12,7 +12,7 @@
     </div>
 
     <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-6">
             <input
                 type="text"
                 wire:model.live.debounce.300ms="search"
@@ -45,6 +45,18 @@
                     </option>
                 @endforeach
             </select>
+
+            <input
+                type="date"
+                wire:model.live="startDate"
+                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
+
+            <input
+                type="date"
+                wire:model.live="endDate"
+                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            >
 
             <button
                 type="button"
