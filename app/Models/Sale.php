@@ -11,6 +11,11 @@ class Sale extends Model
     protected $fillable = [
         'invoice_number',
         'customer_id',
+        'customer_order_id',
+        'status',
+        'cancelled_at',
+        'cancelled_by',
+        'cancel_note',
         'cashier_id',
         'sale_date',
         'subtotal',
@@ -32,6 +37,7 @@ class Sale extends Model
             'grand_total' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'change_amount' => 'decimal:2',
+            'cancelled_at' => 'datetime',
         ];
     }
 
@@ -48,5 +54,15 @@ class Sale extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function customerOrder(): BelongsTo
+    {
+        return $this->belongsTo(CustomerOrder::class);
+    }
+
+    public function canceller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 }
