@@ -331,21 +331,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        /*
-         * Development phase:
-         * Print otomatis sengaja dimatikan agar tampilan struk bisa dicek dulu.
-         *
-         * saat sudha siap untuk langsung print saat halaman dibuka,
-         * hapus comment
-         */
-
-        // @if ($autoPrint)
-        //     // window.addEventListener('load', () => {
-        //     //     window.print();
-        //     // });
-        // @endif
-    </script>
 </body>
 </html>
