@@ -205,6 +205,14 @@
                 >
                     Kembali
                 </a>
+
+                <a
+                    href="{{ route('sales.receipt', $sale) }}"
+                    target="_blank"
+                    class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                    Print Struk
+                </a>
             </div>
         </div>
     </div>

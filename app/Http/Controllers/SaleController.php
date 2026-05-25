@@ -24,4 +24,19 @@ class SaleController extends Controller
 
         return view('pages.sales.show', compact('sale'));
     }
+
+    public function receipt(Sale $sale)
+    {
+        $sale->load([
+            'cashier',
+            'customer',
+            'customerOrder',
+            'items.product',
+            'canceller',
+        ]);
+
+        return view('pages.sales.receipt', [
+            'sale' => $sale,
+        ]);
+    }
 }
