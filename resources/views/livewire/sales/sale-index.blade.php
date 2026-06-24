@@ -26,7 +26,7 @@
             <input
                 type="text"
                 wire:model.live="search"
-                placeholder="Cari invoice..."
+                placeholder="Cari invoice / customer..."
                 class="rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             >
 
@@ -63,6 +63,10 @@
 
                         <th class="px-4 py-3 text-left text-sm font-semibold text-slate-600">
                             Kasir
+                        </th>
+
+                        <th class="px-4 py-3 text-left text-sm font-semibold text-slate-600">
+                            Customer
                         </th>
 
                         <th class="px-4 py-3 text-left text-sm font-semibold text-slate-600">
@@ -103,6 +107,18 @@
                             </td>
 
                             <td class="px-4 py-4 text-sm text-slate-600">
+                                <p class="font-semibold text-slate-900">
+                                    {{ $sale->customer?->name ?? 'Walk-in Customer' }}
+                                </p>
+
+                                @if ($sale->customer?->phone)
+                                    <p class="text-xs text-slate-500">
+                                        {{ $sale->customer->phone }}
+                                    </p>
+                                @endif
+                            </td>
+
+                            <td class="px-4 py-4 text-sm text-slate-600">
                                 {{ $sale->sale_date->format('d M Y H:i') }}
                             </td>
 
@@ -137,7 +153,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-10 text-center text-sm text-slate-500">
+                            <td colspan="6" class="px-4 py-10 text-center text-sm text-slate-500">
                                 Belum ada transaksi.
                             </td>
                         </tr>

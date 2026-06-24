@@ -125,6 +125,8 @@
                                 <span class="rounded-full px-3 py-1 text-xs font-semibold
                                     @if ($order->status === 'pending')
                                         bg-yellow-50 text-yellow-700
+                                    @elseif ($order->status === 'preorder')
+                                        bg-purple-50 text-purple-700
                                     @elseif ($order->status === 'converted')
                                         bg-blue-50 text-blue-700
                                     @elseif ($order->status === 'rejected')
@@ -158,6 +160,32 @@
                                             class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
                                         >
                                             Proses POS
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            wire:click="openRejectModal({{ $order->id }})"
+                                            class="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+                                        >
+                                            Tolak
+                                        </button>
+                                    @endif
+
+                                    @if ($order->status === 'preorder')
+                                        <button
+                                            type="button"
+                                            wire:click="processAvailableToPos({{ $order->id }})"
+                                            class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                                        >
+                                            Proses Stok Ada
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            wire:click="markPreorderAsPending({{ $order->id }})"
+                                            class="rounded-xl bg-purple-50 px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-100"
+                                        >
+                                            Jadikan Pending
                                         </button>
 
                                         <button
@@ -310,6 +338,8 @@
                                 <tr class="border-b border-slate-100 bg-slate-50 text-left">
                                     <th class="px-4 py-3 text-sm font-semibold text-slate-600">Produk</th>
                                     <th class="px-4 py-3 text-sm font-semibold text-slate-600">Qty</th>
+                                    <th class="px-4 py-3 text-sm font-semibold text-slate-600">Tersedia</th>
+                                    <th class="px-4 py-3 text-sm font-semibold text-slate-600">Preorder</th>
                                     <th class="px-4 py-3 text-sm font-semibold text-slate-600">Harga</th>
                                     <th class="px-4 py-3 text-sm font-semibold text-slate-600">Subtotal</th>
                                 </tr>
@@ -330,6 +360,14 @@
 
                                         <td class="px-4 py-4 text-sm text-slate-600">
                                             {{ number_format($item['quantity'], 0, ',', '.') }}
+                                        </td>
+
+                                        <td class="px-4 py-4 text-sm font-semibold text-emerald-700">
+                                            {{ number_format($item['available_quantity'] ?? 0, 0, ',', '.') }}
+                                        </td>
+
+                                        <td class="px-4 py-4 text-sm font-semibold {{ ($item['preorder_quantity'] ?? 0) > 0 ? 'text-purple-700' : 'text-slate-400' }}">
+                                            {{ number_format($item['preorder_quantity'] ?? 0, 0, ',', '.') }}
                                         </td>
 
                                         <td class="px-4 py-4 text-sm text-slate-600">

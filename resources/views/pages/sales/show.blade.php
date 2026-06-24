@@ -104,6 +104,10 @@
                     <p class="text-xs text-slate-500">
                         {{ $sale->sale_date->format('d M Y H:i') }}
                     </p>
+
+                    <p class="mt-1 text-xs font-semibold uppercase text-slate-500">
+                        {{ strtoupper($sale->payment_method) }}
+                    </p>
                 </div>
             </div>
 
@@ -121,6 +125,10 @@
 
                             <th class="px-4 py-3 text-left text-sm font-semibold text-slate-600">
                                 Harga
+                            </th>
+
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-slate-600">
+                                Diskon
                             </th>
 
                             <th class="px-4 py-3 text-right text-sm font-semibold text-slate-600">
@@ -152,6 +160,14 @@
                                     Rp {{ number_format($item->unit_price, 0, ',', '.') }}
                                 </td>
 
+                                <td class="px-4 py-4 text-sm text-red-600">
+                                    @if ($item->discount_amount > 0)
+                                        - Rp {{ number_format($item->discount_amount, 0, ',', '.') }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+
                                 <td class="px-4 py-4 text-right font-bold text-slate-900">
                                     Rp {{ number_format($item->subtotal, 0, ',', '.') }}
                                 </td>
@@ -172,6 +188,18 @@
                             Rp {{ number_format($sale->subtotal, 0, ',', '.') }}
                         </span>
                     </div>
+
+                    @if ($sale->discount_total > 0)
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-500">
+                                Diskon
+                            </span>
+
+                            <span class="font-semibold text-red-600">
+                                - Rp {{ number_format($sale->discount_total, 0, ',', '.') }}
+                            </span>
+                        </div>
+                    @endif
 
                     <div class="flex items-center justify-between border-t border-slate-100 pt-3">
                         <span class="text-lg font-bold text-slate-900">

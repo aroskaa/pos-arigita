@@ -1,6 +1,7 @@
     <?php
 
     use App\Http\Controllers\DashboardController;
+    use App\Http\Controllers\ReportDownloadController;
     use App\Http\Controllers\SaleController;
     use App\Http\Controllers\StockDailyRecapPdfController;
     use Illuminate\Support\Facades\Route;
@@ -29,6 +30,9 @@
             Route::get('/reports', function () {
                 return view('pages.reports.index');
             })->name('reports.index');
+
+            Route::get('/reports/download/{type}', ReportDownloadController::class)
+                ->name('reports.download');
 
             Route::get('/suppliers', function () {
                 return view('pages.suppliers.index');

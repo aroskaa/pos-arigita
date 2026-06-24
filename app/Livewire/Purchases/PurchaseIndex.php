@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Services\ActivityLogger;
 
 class PurchaseIndex extends Component
 {
@@ -370,6 +371,17 @@ class PurchaseIndex extends Component
                     'created_by' => Auth::id(),
                 ]);
             }
+
+            ActivityLogger::log(
+                'purchase.created',
+                "Pembelian {$purchase->invoice_number} berhasil disimpan.",
+                $purchase,
+                [
+                    'total_amount' => (float) $purchase->total_amount,
+                    'item_count' => count($this->items),
+                    'supplier_id' => $purchase->supplier_id,
+                ],
+            );
 
             DB::commit();
 

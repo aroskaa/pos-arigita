@@ -15,8 +15,31 @@
                 </p>
             </div>
 
-            <div class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
-                Order Grosir Minuman
+            <div class="flex flex-wrap items-center gap-3">
+                @auth
+                    <div class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+                        {{ auth()->user()->name }}
+                    </div>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200">
+                            Logout
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200">
+                        Login
+                    </a>
+
+                    <a href="{{ route('register') }}" class="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+                        Register
+                    </a>
+                @endauth
+
+                <div class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+                    Order Grosir Minuman
+                </div>
             </div>
         </div>
     </header>
@@ -69,7 +92,7 @@
                                 </div>
 
                                 <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                                    {{ $product->unit?->abbreviation }}
+                                    Stok {{ number_format($product->stock, 0, ',', '.') }} {{ $product->unit?->abbreviation }}
                                 </span>
                             </div>
 

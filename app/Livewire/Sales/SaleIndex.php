@@ -22,9 +22,15 @@ class SaleIndex extends Component
     {
         return view('livewire.sales.sale-index', [
             'sales' => Sale::query()
-                ->with(['cashier', 'items'])
+                ->with(['cashier', 'customer', 'items'])
                 ->when($this->search, function ($query) {
-                    $query->where('invoice_number', 'like', '%' . $this->search . '%');
+                    $query->where(function ($saleQuery) {
+                        $saleQuery->where('invoice_number', 'like', '%' . $this->search . '%')
+                            ->orWhereHas('customer', function ($customerQuery) {
+                                $customerQuery->where('name', 'like', '%' . $this->search . '%')
+                                    ->orWhere('phone', 'like', '%' . $this->search . '%');
+                            });
+                    });
                 })
                 ->when($this->startDate, function ($query) {
                     $query->whereDate('sale_date', '>=', $this->startDate);

@@ -10,6 +10,7 @@ use Livewire\WithPagination;
 
 use App\Models\Sale;
 use App\Models\StockMovement;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 
 class CustomerOrderIndex extends Component
@@ -60,6 +61,7 @@ class CustomerOrderIndex extends Component
 
             'statuses' => [
                 'pending' => 'Pending',
+                'preorder' => 'Preorder',
                 'converted' => 'Converted',
                 'rejected' => 'Rejected',
                 'cancelled' => 'Cancelled',
@@ -113,8 +115,8 @@ class CustomerOrderIndex extends Component
             'converted_by' => $order->converter?->name,
             'rejected_at' => $order->rejected_at?->format('d M Y H:i'),
             'rejected_by' => $order->rejecter?->name,
-            'rejection_note' => $order->rejection_note,
-            'cancelled_at' => $order->cancelled_at?->format('d M Y H:i'),
+                'rejection_note' => $order->rejection_note,
+                'cancelled_at' => $order->cancelled_at?->format('d M Y H:i'),
             'cancelled_by' => $order->canceller?->name,
             'cancel_note' => $order->cancel_note,
             'items' => $order->items->map(function ($item) {
@@ -122,6 +124,8 @@ class CustomerOrderIndex extends Component
                     'product_name' => $item->product->name,
                     'sku' => $item->product->sku,
                     'quantity' => $item->quantity,
+                    'available_quantity' => $item->available_quantity,
+                    'preorder_quantity' => $item->preorder_quantity,
                     'unit_price' => (float) $item->unit_price,
                     'subtotal' => (float) $item->subtotal,
                 ];
@@ -135,8 +139,8 @@ class CustomerOrderIndex extends Component
     {
         $order = CustomerOrder::query()->findOrFail($orderId);
 
-        if ($order->status !== 'pending') {
-            Session::flash('error', 'Hanya order pending yang dapat ditolak.');
+        if (! in_array($order->status, ['pending', 'preorder'], true)) {
+            Session::flash('error', 'Hanya order pending atau preorder yang dapat ditolak.');
             return;
         }
 
@@ -266,6 +270,18 @@ class CustomerOrderIndex extends Component
                 'cancel_note' => $this->cancelReason,
             ]);
 
+            ActivityLogger::log(
+                'customer_order.cancelled',
+                "Order {$order->order_number} dibatalkan dan stok dikembalikan.",
+                $order,
+                [
+                    'sale_id' => $sale->id,
+                    'invoice_number' => $sale->invoice_number,
+                    'reason' => $this->cancelReason,
+                    'returned_item_count' => $sale->items->count(),
+                ],
+            );
+
             DB::commit();
 
             Session::flash('success', 'Order converted berhasil dibatalkan dan stok telah dikembalikan.');
@@ -296,8 +312,8 @@ class CustomerOrderIndex extends Component
 
         $order = CustomerOrder::query()->findOrFail($this->selectedOrderId);
 
-        if ($order->status !== 'pending') {
-            Session::flash('error', 'Hanya order pending yang dapat ditolak.');
+        if (! in_array($order->status, ['pending', 'preorder'], true)) {
+            Session::flash('error', 'Hanya order pending atau preorder yang dapat ditolak.');
             $this->showRejectModal = false;
             return;
         }
@@ -308,6 +324,16 @@ class CustomerOrderIndex extends Component
             'rejected_by' => Auth::id(),
             'rejection_note' => $this->rejectionNote,
         ]);
+
+        ActivityLogger::log(
+            'customer_order.rejected',
+            "Order {$order->order_number} ditolak.",
+            $order,
+            [
+                'reason' => $this->rejectionNote,
+                'estimated_total' => (float) $order->estimated_total,
+            ],
+        );
 
         Session::flash('success', 'Order pelanggan berhasil ditolak.');
 
@@ -328,6 +354,46 @@ class CustomerOrderIndex extends Component
         redirect()->route('pos.index', [
             'customer_order' => $order->id,
         ]);
+    }
+
+    public function processAvailableToPos(int $orderId): void
+    {
+        $order = CustomerOrder::query()->findOrFail($orderId);
+
+        if ($order->status !== 'preorder') {
+            Session::flash('error', 'Hanya order preorder yang dapat diproses sebagian.');
+            return;
+        }
+
+        redirect()->route('pos.index', [
+            'customer_order' => $order->id,
+            'mode' => 'available',
+        ]);
+    }
+
+    public function markPreorderAsPending(int $orderId): void
+    {
+        $order = CustomerOrder::query()->findOrFail($orderId);
+
+        if ($order->status !== 'preorder') {
+            Session::flash('error', 'Hanya order preorder yang dapat diubah menjadi pending.');
+            return;
+        }
+
+        $order->update([
+            'status' => 'pending',
+        ]);
+
+        ActivityLogger::log(
+            'customer_order.preorder_confirmed',
+            "Preorder {$order->order_number} dikonfirmasi menjadi pending.",
+            $order,
+            [
+                'estimated_total' => (float) $order->estimated_total,
+            ],
+        );
+
+        Session::flash('success', 'Preorder berhasil diubah menjadi pending.');
     }
 
     public function whatsappUrl(?string $phone): ?string

@@ -61,7 +61,12 @@
                             class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
                                     {{ request()->routeIs('customer-orders.index') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>🛒</span>
-                                <span>Order Pelanggan</span>
+                                <span class="flex-1">Order Pelanggan</span>
+                                @if(($posNotifications['pending_orders_count'] ?? 0) > 0)
+                                    <span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700">
+                                        {{ $posNotifications['pending_orders_count'] }}
+                                    </span>
+                                @endif
                             </a>
                         @endif
 
@@ -86,7 +91,12 @@
                             class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
                                     {{ request()->routeIs('products.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>📦</span>
-                                <span>Produk & Stok</span>
+                                <span class="flex-1">Produk & Stok</span>
+                                @if(($posNotifications['low_stock_count'] ?? 0) > 0)
+                                    <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                                        {{ $posNotifications['low_stock_count'] }}
+                                    </span>
+                                @endif
                             </a>
 
                             <a href="{{ route('suppliers.index') }}"
@@ -176,6 +186,17 @@
                 </div>
 
                 <div class="hidden md:flex items-center gap-3">
+                    @if(($posNotifications['total_count'] ?? 0) > 0)
+                        <div class="flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-sm font-bold text-red-700">
+                            <span>{{ $posNotifications['total_count'] }}</span>
+                            <span>Notifikasi</span>
+                        </div>
+                    @else
+                        <div class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
+                            Operasional normal
+                        </div>
+                    @endif
+
                     <div class="rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
                         <div
                             x-data="{

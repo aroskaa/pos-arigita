@@ -14,6 +14,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 
 use App\Models\CustomerOrder;
+use App\Services\ActivityLogger;
 
 class PosIndex extends Component
 {
@@ -24,6 +25,16 @@ class PosIndex extends Component
     public array $cart = [];
 
     public bool $showConfirmModal = false;
+
+    public bool $showReceiptModal = false;
+
+    public ?int $completedSaleId = null;
+
+    public ?string $completedInvoiceNumber = null;
+
+    public int|string $globalDiscount = 0;
+
+    public string $paymentMethod = 'cash';
 
     public ?string $customerName = null;
     public ?string $customerPhone = null;
@@ -70,6 +81,8 @@ class PosIndex extends Component
             ->get(),
 
             'subtotal' => $this->subtotal(),
+            'discountTotal' => $this->discountTotal(),
+            'grandTotal' => $this->grandTotal(),
         ]);
     }
 
@@ -109,6 +122,7 @@ class PosIndex extends Component
                 'stock' => $product->stock,
                 'quantity' => 1,
                 'unit_price' => $price,
+                'discount_amount' => 0,
                 'subtotal' => $price,
             ];
         } else {
@@ -177,6 +191,7 @@ class PosIndex extends Component
     public function clearCart(): void
     {
         $this->cart = [];
+        $this->globalDiscount = 0;
     }
 
     public function openCustomerModal(): void
@@ -265,6 +280,7 @@ class PosIndex extends Component
         }
 
         $this->validateCustomerData();
+        $this->validateDiscountAndPayment();
 
         $this->showConfirmModal = true;
     }
@@ -274,9 +290,17 @@ class PosIndex extends Component
         $this->showConfirmModal = false;
     }
 
+    public function closeReceiptModal(): void
+    {
+        $this->showReceiptModal = false;
+        $this->completedSaleId = null;
+        $this->completedInvoiceNumber = null;
+    }
+
     public function saveTransaction(): void
     {
         $this->validateCustomerData();
+        $this->validateDiscountAndPayment();
 
         $this->showConfirmModal = false;
 
@@ -293,12 +317,14 @@ class PosIndex extends Component
                     ->lockForUpdate()
                     ->findOrFail($this->loadedCustomerOrderId);
 
-                if ($customerOrder->status !== 'pending') {
-                    throw new \Exception('Order pelanggan ini sudah tidak berstatus pending dan tidak dapat diproses ulang.');
+                if (! in_array($customerOrder->status, ['pending', 'preorder'], true)) {
+                    throw new \Exception('Order pelanggan ini sudah tidak berstatus pending/preorder dan tidak dapat diproses ulang.');
                 }
             }
 
             $subtotal = $this->subtotal();
+            $discountTotal = $this->discountTotal();
+            $grandTotal = $this->grandTotal();
 
             $customerId = $this->selectedCustomerId;
 
@@ -320,12 +346,12 @@ class PosIndex extends Component
                 'customer_order_id' => $this->loadedCustomerOrderId,
                 'cashier_id' => Auth::id(),
                 'sale_date' => now(),
-                'subtotal' => $this->subtotal(),
-                'discount_total' => 0,
-                'grand_total' => $this->subtotal(),
-                'paid_amount' => $this->subtotal(),
+                'subtotal' => $subtotal,
+                'discount_total' => $discountTotal,
+                'grand_total' => $grandTotal,
+                'paid_amount' => $grandTotal,
                 'change_amount' => 0,
-                'payment_method' => 'cash',
+                'payment_method' => $this->paymentMethod,
                 'status' => 'completed',
                 'note' => null,
             ]);
@@ -347,7 +373,8 @@ class PosIndex extends Component
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'cost_price' => $product->average_cost,
-                    'subtotal' => $item['subtotal'],
+                    'discount_amount' => $this->itemDiscountAmount($item),
+                    'subtotal' => $this->itemNetSubtotal($item),
                 ]);
 
                 $stockBefore = (int) $product->stock;
@@ -378,7 +405,7 @@ class PosIndex extends Component
             if ($this->loadedCustomerOrderId) {
                 $updated = CustomerOrder::query()
                     ->where('id', $this->loadedCustomerOrderId)
-                    ->where('status', 'pending')
+                    ->whereIn('status', ['pending', 'preorder'])
                     ->update([
                         'status' => 'converted',
                         'converted_at' => now(),
@@ -390,11 +417,26 @@ class PosIndex extends Component
                 }
             }
 
+            ActivityLogger::log(
+                'sale.completed',
+                "Transaksi {$sale->invoice_number} berhasil disimpan.",
+                $sale,
+                [
+                    'grand_total' => (float) $sale->grand_total,
+                    'discount_total' => (float) $sale->discount_total,
+                    'payment_method' => $sale->payment_method,
+                    'item_count' => count($this->cart),
+                    'customer_order_id' => $this->loadedCustomerOrderId,
+                ],
+            );
+
             DB::commit();
 
             // $this->dispatch('focus-quantity', productId: $product->id);
 
             $invoiceNumber = $sale->invoice_number;
+            $this->completedSaleId = $sale->id;
+            $this->completedInvoiceNumber = $invoiceNumber;
 
             $this->clearCart();
 
@@ -412,6 +454,9 @@ class PosIndex extends Component
             ]);
 
             $this->customerType = 'personal';
+            $this->globalDiscount = 0;
+            $this->paymentMethod = 'cash';
+            $this->showReceiptModal = true;
 
             $this->dispatch('$refresh');
 
@@ -436,11 +481,47 @@ class PosIndex extends Component
 
         $this->cart[$productId]['unit_price'] = $unitPrice;
         $this->cart[$productId]['subtotal'] = $unitPrice * $quantity;
+        $this->cart[$productId]['discount_amount'] = min(
+            $this->itemDiscountAmount($this->cart[$productId]),
+            (float) $this->cart[$productId]['subtotal'],
+        );
     }
 
     public function subtotal(): float
     {
         return collect($this->cart)->sum('subtotal');
+    }
+
+    public function itemDiscountTotal(): float
+    {
+        return collect($this->cart)->sum(fn (array $item) => $this->itemDiscountAmount($item));
+    }
+
+    public function discountTotal(): float
+    {
+        return min(
+            $this->itemDiscountTotal() + $this->globalDiscountAmount(),
+            $this->subtotal(),
+        );
+    }
+
+    public function grandTotal(): float
+    {
+        return max(0, $this->subtotal() - $this->discountTotal());
+    }
+
+    public function updateItemDiscount(int $productId, mixed $discount): void
+    {
+        if (! isset($this->cart[$productId])) {
+            return;
+        }
+
+        $grossSubtotal = (float) $this->cart[$productId]['subtotal'];
+
+        $this->cart[$productId]['discount_amount'] = min(
+            $this->currencyToNumber($discount),
+            $grossSubtotal,
+        );
     }
 
     public function updateQuantity(int $productId, mixed $quantity): void
@@ -475,8 +556,8 @@ class PosIndex extends Component
             ->with(['items.product.unit', 'items.product.prices', 'customer'])
             ->findOrFail($customerOrderId);
 
-        if ($order->status !== 'pending') {
-            Session::flash('error', 'Order pelanggan ini tidak dapat diproses karena statusnya bukan pending.');
+        if (! in_array($order->status, ['pending', 'preorder'], true)) {
+            Session::flash('error', 'Order pelanggan ini tidak dapat diproses karena statusnya bukan pending/preorder.');
             return;
         }
 
@@ -523,6 +604,7 @@ class PosIndex extends Component
                 'stock' => $product->stock,
                 'quantity' => $cartQuantity,
                 'unit_price' => $price,
+                'discount_amount' => 0,
                 'subtotal' => $cartQuantity * $price,
             ];
         }
@@ -580,5 +662,43 @@ class PosIndex extends Component
         $newNumber = str_pad((string) ($lastNumber + 1), 4, '0', STR_PAD_LEFT);
 
         return "INV-{$date}-{$newNumber}";
+    }
+
+    private function validateDiscountAndPayment(): void
+    {
+        $this->paymentMethod = in_array($this->paymentMethod, ['cash', 'qris', 'debit', 'transfer', 'other'], true)
+            ? $this->paymentMethod
+            : 'cash';
+
+        $this->globalDiscount = min(
+            $this->currencyToNumber($this->globalDiscount),
+            max(0, $this->subtotal() - $this->itemDiscountTotal()),
+        );
+    }
+
+    private function currencyToNumber(mixed $value): int
+    {
+        return (int) preg_replace('/\D/', '', (string) $value);
+    }
+
+    private function globalDiscountAmount(): float
+    {
+        return min(
+            $this->currencyToNumber($this->globalDiscount),
+            max(0, $this->subtotal() - $this->itemDiscountTotal()),
+        );
+    }
+
+    private function itemDiscountAmount(array $item): float
+    {
+        return min(
+            $this->currencyToNumber($item['discount_amount'] ?? 0),
+            (float) ($item['subtotal'] ?? 0),
+        );
+    }
+
+    private function itemNetSubtotal(array $item): float
+    {
+        return max(0, (float) ($item['subtotal'] ?? 0) - $this->itemDiscountAmount($item));
     }
 }

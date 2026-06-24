@@ -6,6 +6,8 @@ use App\Models\Customer;
 use App\Models\CustomerOrder;
 use App\Models\CustomerOrderItem;
 use App\Models\Product;
+use App\Services\ActivityLogger;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -30,6 +32,22 @@ class CustomerOrderCreate extends Component
     public bool $showSuccess = false;
 
     public ?string $createdOrderNumber = null;
+
+    public function mount(): void
+    {
+        $user = Auth::user();
+
+        if (! $user || ! $user->isCustomer()) {
+            return;
+        }
+
+        $customer = $user->customer;
+
+        $this->customerType = $customer?->type ?? 'personal';
+        $this->customerName = $customer?->name ?? $user->name;
+        $this->customerPhone = $customer?->phone ?? $user->phone;
+        $this->customerAddress = $customer?->address;
+    }
 
     public function render()
     {
@@ -172,23 +190,53 @@ class CustomerOrderCreate extends Component
         DB::beginTransaction();
 
         try {
-            $customer = Customer::query()->firstOrCreate(
-                [
-                    'phone' => $this->customerPhone,
-                ],
-                [
-                    'type' => $this->customerType,
-                    'name' => $this->customerName,
-                    'address' => $this->customerAddress,
-                    'note' => null,
-                ]
-            );
+            $user = Auth::user();
 
-            $customer->update([
+            if ($user && $user->isCustomer()) {
+                $customer = Customer::query()
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if (! $customer) {
+                    $customer = Customer::query()
+                        ->whereNull('user_id')
+                        ->where('phone', $this->customerPhone)
+                        ->first() ?? new Customer();
+                }
+
+                $customer->user_id = $user->id;
+
+                $user->update([
+                    'name' => $this->customerName,
+                    'phone' => $this->customerPhone,
+                ]);
+            } else {
+                $customer = Customer::query()->firstOrCreate(
+                    [
+                        'phone' => $this->customerPhone,
+                    ],
+                    [
+                        'type' => $this->customerType,
+                        'name' => $this->customerName,
+                        'address' => $this->customerAddress,
+                        'note' => null,
+                    ]
+                );
+            }
+
+            $customer->fill([
                 'type' => $this->customerType,
                 'name' => $this->customerName,
+                'phone' => $this->customerPhone,
                 'address' => $this->customerAddress,
-            ]);
+            ])->save();
+
+            $products = Product::query()
+                ->whereIn('id', collect($this->cart)->pluck('product_id'))
+                ->get()
+                ->keyBy('id');
+
+            $hasPreorderItems = false;
 
             $order = CustomerOrder::query()->create([
                 'customer_id' => $customer->id,
@@ -203,14 +251,43 @@ class CustomerOrderCreate extends Component
             ]);
 
             foreach ($this->cart as $item) {
+                $product = $products->get($item['product_id']);
+                $requestedQuantity = (int) $item['quantity'];
+                $availableQuantity = min($requestedQuantity, max(0, (int) ($product?->stock ?? 0)));
+                $preorderQuantity = max(0, $requestedQuantity - $availableQuantity);
+
+                if ($preorderQuantity > 0) {
+                    $hasPreorderItems = true;
+                }
+
                 CustomerOrderItem::query()->create([
                     'customer_order_id' => $order->id,
                     'product_id' => $item['product_id'],
-                    'quantity' => (int) $item['quantity'],
+                    'quantity' => $requestedQuantity,
+                    'available_quantity' => $availableQuantity,
+                    'preorder_quantity' => $preorderQuantity,
                     'unit_price' => (float) $item['unit_price'],
                     'subtotal' => (float) $item['subtotal'],
                 ]);
             }
+
+            if ($hasPreorderItems) {
+                $order->update(['status' => 'preorder']);
+            }
+
+            ActivityLogger::log(
+                'customer_order.created',
+                "Order pelanggan {$order->order_number} masuk.",
+                $order,
+                [
+                    'estimated_total' => (float) $order->estimated_total,
+                    'item_count' => count($this->cart),
+                    'status' => $order->status,
+                    'customer_name' => $order->customer_name,
+                    'customer_phone' => $order->customer_phone,
+                    'user_id' => $user?->id,
+                ],
+            );
 
             DB::commit();
 
@@ -220,16 +297,29 @@ class CustomerOrderCreate extends Component
             $this->reset([
                 'search',
                 'cart',
-                'customerName',
-                'customerPhone',
-                'customerAddress',
                 'note',
             ]);
 
-            $this->customerType = 'personal';
+            if ($user && $user->isCustomer()) {
+                $this->customerType = $customer->type;
+                $this->customerName = $customer->name;
+                $this->customerPhone = $customer->phone;
+                $this->customerAddress = $customer->address;
+            } else {
+                $this->reset([
+                    'customerName',
+                    'customerPhone',
+                    'customerAddress',
+                ]);
+
+                $this->customerType = 'personal';
+            }
+
             $this->customerFormKey++;
 
-            $this->dispatch('clear-customer-order-form');
+            if (! $user || ! $user->isCustomer()) {
+                $this->dispatch('clear-customer-order-form');
+            }
         } catch (\Throwable $e) {
             DB::rollBack();
 

@@ -16,6 +16,30 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
+        <!-- Customer Type -->
+        <div class="mt-4">
+            <x-input-label for="customer_type" value="Tipe Pelanggan" />
+            <select id="customer_type" name="customer_type" class="block mt-1 w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                <option value="personal" @selected(old('customer_type', 'personal') === 'personal')>Perorangan</option>
+                <option value="store" @selected(old('customer_type') === 'store')>Toko</option>
+            </select>
+            <x-input-error :messages="$errors->get('customer_type')" class="mt-2" />
+        </div>
+
+        <!-- Phone -->
+        <div class="mt-4">
+            <x-input-label for="phone" value="Nomor HP" />
+            <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone" :value="old('phone')" inputmode="numeric" autocomplete="tel" />
+            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
+        </div>
+
+        <!-- Address -->
+        <div class="mt-4">
+            <x-input-label for="address" value="Alamat" />
+            <textarea id="address" name="address" rows="3" class="block mt-1 w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">{{ old('address') }}</textarea>
+            <x-input-error :messages="$errors->get('address')" class="mt-2" />
+        </div>
+
         <!-- Password -->
         <div class="mt-4">
             <x-input-label for="password" :value="__('Password')" />

@@ -250,9 +250,16 @@
                             </span>
 
                             <span>
-                                {{ number_format($item->subtotal, 0, ',', '.') }}
+                                {{ number_format(($item->quantity * $item->unit_price), 0, ',', '.') }}
                             </span>
                         </div>
+
+                        @if ($item->discount_amount > 0)
+                            <div class="item-detail">
+                                <span>Diskon item</span>
+                                <span>- {{ number_format($item->discount_amount, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
 
@@ -331,5 +338,27 @@
             </div>
         </div>
     </div>
+
+    @if (request()->boolean('print'))
+        <script>
+            window.addEventListener('load', () => {
+                const detailUrl = @json(route('sales.show', $sale));
+                let redirected = false;
+
+                const redirectToDetail = () => {
+                    if (redirected || @json(request('redirect') !== 'detail')) {
+                        return;
+                    }
+
+                    redirected = true;
+                    window.location.href = detailUrl;
+                };
+
+                window.addEventListener('afterprint', redirectToDetail, { once: true });
+                window.print();
+                setTimeout(redirectToDetail, 1000);
+            });
+        </script>
+    @endif
 </body>
 </html>

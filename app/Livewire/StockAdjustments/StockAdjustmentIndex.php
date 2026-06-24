@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Services\ActivityLogger;
 
 class StockAdjustmentIndex extends Component
 {
@@ -206,7 +207,7 @@ class StockAdjustmentIndex extends Component
                 'stock' => $stockAfter,
             ]);
 
-            StockMovement::query()->create([
+            $movement = StockMovement::query()->create([
                 'product_id' => $product->id,
                 'type' => 'adjustment',
                 'reference_type' => Product::class,
@@ -220,6 +221,19 @@ class StockAdjustmentIndex extends Component
                 'note' => $this->note,
                 'created_by' => Auth::id(),
             ]);
+
+            ActivityLogger::log(
+                'stock.adjusted',
+                "Stock adjustment {$product->name}: {$stockBefore} menjadi {$stockAfter}.",
+                $movement,
+                [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $stockAfter,
+                    'difference' => $difference,
+                ],
+            );
 
             DB::commit();
 

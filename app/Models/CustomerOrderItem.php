@@ -11,6 +11,8 @@ class CustomerOrderItem extends Model
         'customer_order_id',
         'product_id',
         'quantity',
+        'available_quantity',
+        'preorder_quantity',
         'unit_price',
         'subtotal',
     ];
@@ -19,6 +21,8 @@ class CustomerOrderItem extends Model
     {
         return [
             'quantity' => 'integer',
+            'available_quantity' => 'integer',
+            'preorder_quantity' => 'integer',
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
         ];

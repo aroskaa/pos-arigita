@@ -216,6 +216,27 @@
                                     </p>
                                 </div>
                             </div>
+
+                            <div class="mt-4">
+                                <label class="mb-2 block text-xs font-semibold uppercase text-slate-400">
+                                    Diskon Item
+                                </label>
+
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                                        Rp
+                                    </span>
+
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="{{ $item['subtotal'] }}"
+                                        value="{{ $item['discount_amount'] ?? 0 }}"
+                                        wire:change="updateItemDiscount({{ $item['product_id'] }}, $event.target.value)"
+                                        class="w-full rounded-xl border border-slate-200 px-3 py-2 pl-9 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    >
+                                </div>
+                            </div>
                         </div>
                     @empty
                         <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
@@ -263,11 +284,65 @@
                 </div> --}}
 
                 <div class="mt-6 border-t border-slate-100 pt-5">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                Diskon Global
+                            </label>
+
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">
+                                    Rp
+                                </span>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    wire:model.live="globalDiscount"
+                                    class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                Metode Pembayaran
+                            </label>
+
+                            <select
+                                wire:model.live="paymentMethod"
+                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            >
+                                <option value="cash">Tunai</option>
+                                <option value="qris">QRIS</option>
+                                <option value="debit">Debit</option>
+                                <option value="transfer">Transfer</option>
+                                <option value="other">Lainnya</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 space-y-2">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-semibold text-slate-500">Subtotal</span>
                         <span class="text-xl font-bold text-slate-900">
                             Rp {{ number_format($subtotal, 0, ',', '.') }}
                         </span>
+                    </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-semibold text-slate-500">Total Diskon</span>
+                            <span class="text-sm font-bold text-red-600">
+                                - Rp {{ number_format($discountTotal, 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between border-t border-slate-100 pt-3">
+                            <span class="text-base font-bold text-slate-900">Grand Total</span>
+                            <span class="text-2xl font-bold text-blue-700">
+                                Rp {{ number_format($grandTotal, 0, ',', '.') }}
+                            </span>
+                        </div>
                     </div>
 
                     <button
@@ -328,7 +403,23 @@
                         <div class="mt-3 flex items-center justify-between">
                             <span class="text-sm font-semibold text-blue-700">Grand Total</span>
                             <span class="text-xl font-bold text-blue-900">
-                                Rp {{ number_format($subtotal, 0, ',', '.') }}
+                                Rp {{ number_format($grandTotal, 0, ',', '.') }}
+                            </span>
+                        </div>
+
+                        @if ($discountTotal > 0)
+                            <div class="mt-3 flex items-center justify-between">
+                                <span class="text-sm font-semibold text-blue-700">Diskon</span>
+                                <span class="text-sm font-bold text-red-700">
+                                    - Rp {{ number_format($discountTotal, 0, ',', '.') }}
+                                </span>
+                            </div>
+                        @endif
+
+                        <div class="mt-3 flex items-center justify-between">
+                            <span class="text-sm font-semibold text-blue-700">Pembayaran</span>
+                            <span class="text-sm font-bold uppercase text-blue-900">
+                                {{ $paymentMethod }}
                             </span>
                         </div>
                     </div>
@@ -544,6 +635,53 @@
                     </button>
                 </div>
 
+            </div>
+        </div>
+    @endif
+
+    @if ($showReceiptModal && $completedSaleId)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-md rounded-3xl bg-white shadow-2xl">
+                <div class="border-b border-slate-100 px-6 py-5">
+                    <h3 class="text-xl font-bold text-slate-900">
+                        Transaksi Selesai
+                    </h3>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        Invoice {{ $completedInvoiceNumber }} berhasil disimpan.
+                    </p>
+                </div>
+
+                <div class="p-6">
+                    <div class="rounded-2xl bg-green-50 px-4 py-3 text-sm text-green-700">
+                        Pilih print struk untuk membuka halaman struk, atau buka detail invoice untuk cek transaksi lengkap.
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 border-t border-slate-100 px-6 py-5 sm:flex-row sm:justify-end">
+                    <button
+                        type="button"
+                        wire:click="closeReceiptModal"
+                        class="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                        Transaksi Baru
+                    </button>
+
+                    <a
+                        href="{{ route('sales.show', $completedSaleId) }}"
+                        class="rounded-2xl bg-blue-50 px-5 py-3 text-center text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                        Detail Invoice
+                    </a>
+
+                    <a
+                        href="{{ route('sales.receipt', ['sale' => $completedSaleId, 'print' => 1, 'redirect' => 'detail']) }}"
+                        target="_blank"
+                        class="rounded-2xl bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700"
+                    >
+                        Print Struk
+                    </a>
+                </div>
             </div>
         </div>
     @endif

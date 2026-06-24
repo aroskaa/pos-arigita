@@ -469,6 +469,12 @@
                         Kosongkan kolom maksimum jika harga berlaku untuk jumlah pembelian tanpa batas.
                     </div>
 
+                    @error('bulkPrices')
+                        <div class="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                            {{ $message }}
+                        </div>
+                    @enderror
+
                     <div class="mt-5 space-y-4">
                         @foreach ($bulkPrices as $index => $price)
                             <div

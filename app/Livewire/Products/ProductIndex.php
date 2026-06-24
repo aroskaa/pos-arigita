@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductPrice;
 use App\Models\Unit;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -144,9 +145,9 @@ class ProductIndex extends Component
         $validated = $this->validate();
 
         if ($this->productId) {
-            Product::query()
-                ->findOrFail($this->productId)
-                ->update([
+            $product = Product::query()->findOrFail($this->productId);
+
+            $product->update([
                     'category_id' => (int) $validated['category_id'],
                     'unit_id' => (int) $validated['unit_id'],
                     'name' => $validated['name'],
@@ -163,8 +164,20 @@ class ProductIndex extends Component
                     'minimum_stock' => (int) $validated['minimum_stock'],
                     'is_active' => $this->is_active,
                 ]);
+
+            ActivityLogger::log(
+                'product.updated',
+                "Produk {$product->name} diperbarui.",
+                $product,
+                [
+                    'sku' => $product->sku,
+                    'selling_price' => (float) $product->selling_price,
+                    'minimum_stock' => (int) $product->minimum_stock,
+                    'is_active' => (bool) $product->is_active,
+                ],
+            );
         } else {
-            Product::query()->create([
+            $product = Product::query()->create([
                 'category_id' => (int) $validated['category_id'],
                 'unit_id' => (int) $validated['unit_id'],
                 'name' => $validated['name'],
@@ -179,6 +192,17 @@ class ProductIndex extends Component
                 'minimum_stock' => (int) $validated['minimum_stock'],
                 'is_active' => $this->is_active,
             ]);
+
+            ActivityLogger::log(
+                'product.created',
+                "Produk {$product->name} ditambahkan.",
+                $product,
+                [
+                    'sku' => $product->sku,
+                    'stock' => (int) $product->stock,
+                    'selling_price' => (float) $product->selling_price,
+                ],
+            );
         }
 
         Session::flash(
@@ -198,6 +222,17 @@ class ProductIndex extends Component
     {
         /** @var Product $product */
         $product = Product::query()->findOrFail($id);
+
+        ActivityLogger::log(
+            'product.deleted',
+            "Produk {$product->name} dihapus.",
+            $product,
+            [
+                'sku' => $product->sku,
+                'stock' => (int) $product->stock,
+            ],
+        );
+
         $product->delete();
 
         Session::flash('success', 'Produk berhasil dihapus.');
@@ -251,12 +286,31 @@ class ProductIndex extends Component
 
     public function saveBulkPrices(): void
     {
+        $this->resetErrorBag();
+
         $this->validate([
+            'bulkProductId' => ['required', 'exists:products,id'],
             'bulkPrices' => ['required', 'array', 'min:1'],
             'bulkPrices.*.min_qty' => ['required', 'integer', 'min:1'],
             'bulkPrices.*.max_qty' => ['nullable', 'integer', 'min:1'],
             'bulkPrices.*.price' => ['required', 'integer', 'min:0'],
+        ], [
+            'bulkProductId.required' => 'Produk tidak ditemukan. Tutup modal dan buka ulang harga grosir.',
+            'bulkPrices.required' => 'Minimal satu baris harga grosir wajib diisi.',
+            'bulkPrices.min' => 'Minimal satu baris harga grosir wajib diisi.',
+            'bulkPrices.*.min_qty.required' => 'Minimal qty wajib diisi.',
+            'bulkPrices.*.min_qty.integer' => 'Minimal qty harus berupa angka.',
+            'bulkPrices.*.min_qty.min' => 'Minimal qty paling kecil adalah 1.',
+            'bulkPrices.*.max_qty.integer' => 'Maksimal qty harus berupa angka.',
+            'bulkPrices.*.max_qty.min' => 'Maksimal qty paling kecil adalah 1.',
+            'bulkPrices.*.price.required' => 'Harga wajib diisi.',
+            'bulkPrices.*.price.integer' => 'Harga harus berupa angka.',
+            'bulkPrices.*.price.min' => 'Harga tidak boleh kurang dari 0.',
         ]);
+
+        if (! $this->validateBulkPriceRanges()) {
+            return;
+        }
 
         ProductPrice::query()
             ->where('product_id', '=', $this->bulkProductId)
@@ -271,6 +325,17 @@ class ProductIndex extends Component
             ]);
         }
 
+        $product = Product::query()->findOrFail($this->bulkProductId);
+
+        ActivityLogger::log(
+            'product.bulk_prices_updated',
+            "Harga grosir {$product->name} diperbarui.",
+            $product,
+            [
+                'price_tier_count' => count($this->bulkPrices),
+            ],
+        );
+
         Session::flash('success', 'Harga grosir berhasil diperbarui.');
 
         $this->showBulkPriceModal = false;
@@ -279,6 +344,82 @@ class ProductIndex extends Component
         $this->bulkPrices = [];
 
         $this->dispatch('$refresh');
+    }
+
+    private function validateBulkPriceRanges(): bool
+    {
+        $ranges = collect($this->bulkPrices)
+            ->map(function (array $price, int $index) {
+                $min = (int) $price['min_qty'];
+                $max = filled($price['max_qty']) ? (int) $price['max_qty'] : null;
+
+                return [
+                    'index' => $index,
+                    'min' => $min,
+                    'max' => $max,
+                    'end' => $max ?? PHP_INT_MAX,
+                ];
+            })
+            ->sortBy('min')
+            ->values();
+
+        $seenMinimums = [];
+        $openEndedCount = 0;
+        $previous = null;
+
+        foreach ($ranges as $range) {
+            if (isset($seenMinimums[$range['min']])) {
+                $this->addError(
+                    "bulkPrices.{$range['index']}.min_qty",
+                    'Minimal qty tidak boleh sama dengan baris lain.'
+                );
+
+                return false;
+            }
+
+            $seenMinimums[$range['min']] = true;
+
+            if ($range['max'] !== null && $range['max'] < $range['min']) {
+                $this->addError(
+                    "bulkPrices.{$range['index']}.max_qty",
+                    'Maksimal qty harus lebih besar atau sama dengan minimal qty.'
+                );
+
+                return false;
+            }
+
+            if ($range['max'] === null) {
+                $openEndedCount++;
+
+                if ($openEndedCount > 1) {
+                    $this->addError('bulkPrices', 'Hanya boleh ada satu baris tanpa maksimal qty.');
+
+                    return false;
+                }
+            }
+
+            if ($previous && $range['min'] <= $previous['end']) {
+                $this->addError(
+                    'bulkPrices',
+                    'Range harga grosir tidak boleh saling tumpang tindih.'
+                );
+
+                return false;
+            }
+
+            if ($previous && $previous['max'] === null) {
+                $this->addError(
+                    'bulkPrices',
+                    'Baris tanpa maksimal qty harus menjadi range terakhir.'
+                );
+
+                return false;
+            }
+
+            $previous = $range;
+        }
+
+        return true;
     }
 
     private function resetForm(): void
