@@ -21,6 +21,12 @@
         Route::get('/dashboard', DashboardController::class)
             ->name('dashboard');
 
+        Route::middleware('role:owner')->group(function () {
+            Route::get('/users', function () {
+                return view('pages.users.index');
+            })->name('users.index');
+        });
+
         Route::middleware('role:owner,admin')->group(function () {
             Route::get('/admin/products', function () {
                 return view('pages.products.index');

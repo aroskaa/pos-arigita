@@ -112,6 +112,15 @@
                                 <span>📥</span>
                                 <span>Pembelian</span>
                             </a>
+
+                            @if(auth()->user()->isOwner())
+                                <a href="{{ route('users.index') }}"
+                                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                        {{ request()->routeIs('users.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                    <span>👥</span>
+                                    <span>Pengguna</span>
+                                </a>
+                            @endif
                         </div>
                     </div>
 
