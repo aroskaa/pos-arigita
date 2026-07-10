@@ -243,6 +243,7 @@
                     class="mt-6 space-y-4 border-t border-slate-100 pt-5"
                     wire:key="customer-order-form-{{ $customerFormKey }}"
                 >
+                    @guest
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Tipe Pelanggan
@@ -311,6 +312,7 @@
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+                    @endguest
 
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
