@@ -222,17 +222,56 @@
                                     Diskon Item
                                 </label>
 
-                                <div class="relative">
+                                 <div
+                                    class="relative"
+                                    wire:key="item-discount-{{ $item['product_id'] }}"
+                                    x-data="{
+                                        raw: {{ $item['discount_amount'] ?? 0 }},
+                                        display: '',
+                                        maxLimit: {{ $item['subtotal'] }},
+                                        format(value) {
+                                            const number = String(value ?? '').replace(/\D/g, '');
+
+                                            if (number === '') {
+                                                this.display = '';
+                                                this.raw = 0;
+                                                return;
+                                            }
+
+                                            let val = parseInt(number, 10);
+                                            if (val > this.maxLimit) {
+                                                val = this.maxLimit;
+                                            }
+
+                                            this.raw = val;
+                                            this.display = new Intl.NumberFormat('id-ID').format(val);
+                                        },
+                                        applyDiscount() {
+                                            const id = this.$el.closest('[wire\\:id]').getAttribute('wire:id');
+                                            window.Livewire.find(id).updateItemDiscount({{ $item['product_id'] }}, this.raw);
+                                        }
+                                    }"
+                                    x-init="format(raw)"
+                                    x-effect="
+                                        if (document.activeElement !== $refs.itemDiscountInput) {
+                                            raw = {{ $item['discount_amount'] ?? 0 }};
+                                            format(raw);
+                                        }
+                                    "
+                                >
                                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
                                         Rp
                                     </span>
 
                                     <input
-                                        type="number"
-                                        min="0"
-                                        max="{{ $item['subtotal'] }}"
-                                        value="{{ $item['discount_amount'] ?? 0 }}"
-                                        wire:change="updateItemDiscount({{ $item['product_id'] }}, $event.target.value)"
+                                        x-ref="itemDiscountInput"
+                                        type="text"
+                                        inputmode="numeric"
+                                        x-model="display"
+                                        x-on:input="format($event.target.value)"
+                                        x-on:blur="applyDiscount()"
+                                        x-on:keydown.enter.prevent="applyDiscount(); document.getElementById('product-search-input')?.focus()"
+                                        placeholder="0"
                                         class="w-full rounded-xl border border-slate-200 px-3 py-2 pl-9 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                     >
                                 </div>
@@ -288,17 +327,50 @@
                         <div>
                             <label class="mb-2 block text-sm font-semibold text-slate-700">
                                 Diskon Global
-                            </label>
+                            </label>                             <div
+                                x-data="{
+                                    raw: {{ $globalDiscount ?: 0 }},
+                                    display: '',
+                                    format(value) {
+                                        const number = String(value ?? '').replace(/\D/g, '');
 
-                            <div class="relative">
+                                        if (number === '') {
+                                            this.display = '';
+                                            this.raw = 0;
+                                            return;
+                                        }
+
+                                        const val = parseInt(number, 10);
+                                        this.raw = val;
+                                        this.display = new Intl.NumberFormat('id-ID').format(val);
+                                    },
+                                    applyDiscount() {
+                                        const id = this.$el.closest('[wire\\:id]').getAttribute('wire:id');
+                                        window.Livewire.find(id).set('globalDiscount', this.raw);
+                                    }
+                                }"
+                                x-init="format(raw)"
+                                x-effect="
+                                    if (document.activeElement !== $refs.globalDiscountInput) {
+                                        raw = {{ $globalDiscount ?: 0 }};
+                                        format(raw);
+                                    }
+                                "
+                                class="relative"
+                            >
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">
                                     Rp
                                 </span>
 
                                 <input
-                                    type="number"
-                                    min="0"
-                                    wire:model.live="globalDiscount"
+                                    x-ref="globalDiscountInput"
+                                    type="text"
+                                    inputmode="numeric"
+                                    x-model="display"
+                                    x-on:input="format($event.target.value)"
+                                    x-on:blur="applyDiscount()"
+                                    x-on:keydown.enter.prevent="applyDiscount(); document.getElementById('product-search-input')?.focus()"
+                                    placeholder="0"
                                     class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 >
                             </div>

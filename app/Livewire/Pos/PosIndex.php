@@ -32,7 +32,7 @@ class PosIndex extends Component
 
     public ?string $completedInvoiceNumber = null;
 
-    public int|string $globalDiscount = 0;
+    public $globalDiscount = 0;
 
     public string $paymentMethod = 'cash';
 
