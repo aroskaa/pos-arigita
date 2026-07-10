@@ -49,20 +49,40 @@
         </div>
 
         <div class="mt-5 flex flex-wrap gap-3">
-            @foreach ([
-                'financial' => 'Download Keuangan',
-                'sales' => 'Download Penjualan',
-                'inventory' => 'Download Barang',
-                'stock-movements' => 'Download Pergerakan Stok',
-                'activity-logs' => 'Download Log',
-            ] as $type => $label)
+            @if ($tab === 'sales')
                 <a
-                    href="{{ route('reports.download', ['type' => $type, 'start_date' => $startDate, 'end_date' => $endDate]) }}"
+                    href="{{ route('reports.download', ['type' => 'financial', 'start_date' => $startDate, 'end_date' => $endDate]) }}"
                     class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
                 >
-                    {{ $label }}
+                    Download Keuangan
                 </a>
-            @endforeach
+                <a
+                    href="{{ route('reports.download', ['type' => 'sales', 'start_date' => $startDate, 'end_date' => $endDate]) }}"
+                    class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                >
+                    Download Penjualan
+                </a>
+            @elseif ($tab === 'inventory')
+                <a
+                    href="{{ route('reports.download', ['type' => 'inventory', 'start_date' => $startDate, 'end_date' => $endDate, 'product_search' => $productSearch]) }}"
+                    class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                >
+                    Download Barang
+                </a>
+                <a
+                    href="{{ route('reports.download', ['type' => 'stock-movements', 'start_date' => $startDate, 'end_date' => $endDate, 'product_search' => $productSearch, 'movement_type' => $movementType]) }}"
+                    class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                >
+                    Download Pergerakan Stok
+                </a>
+            @elseif ($tab === 'logs')
+                <a
+                    href="{{ route('reports.download', ['type' => 'activity-logs', 'start_date' => $startDate, 'end_date' => $endDate, 'log_search' => $logSearch, 'log_event' => $logEvent]) }}"
+                    class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                >
+                    Download Log
+                </a>
+            @endif
         </div>
     </div>
 
@@ -273,6 +293,31 @@
                         </div>
                     @endforelse
                 </div>
+                @if ($movementSummary->hasPages())
+                    <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            wire:click="previousPage('summaryPage')"
+                            @if ($movementSummary->onFirstPage()) disabled @endif
+                            class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                        >
+                            Sebelumnya
+                        </button>
+                        
+                        <span class="text-xs font-bold text-slate-500">
+                            Halaman {{ $movementSummary->currentPage() }} dari {{ $movementSummary->lastPage() }}
+                        </span>
+
+                        <button
+                            type="button"
+                            wire:click="nextPage('summaryPage')"
+                            @if (!$movementSummary->hasMorePages()) disabled @endif
+                            class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                        >
+                            Selanjutnya
+                        </button>
+                    </div>
+                @endif
             </div>
 
             <div class="xl:col-span-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -321,7 +366,31 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
+                @if ($recentMovements->hasPages())
+                    <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            wire:click="previousPage('movementsPage')"
+                            @if ($recentMovements->onFirstPage()) disabled @endif
+                            class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                        >
+                            Sebelumnya
+                        </button>
+                        
+                        <span class="text-xs font-bold text-slate-500">
+                            Halaman {{ $recentMovements->currentPage() }} dari {{ $recentMovements->lastPage() }}
+                        </span>
+
+                        <button
+                            type="button"
+                            wire:click="nextPage('movementsPage')"
+                            @if (!$recentMovements->hasMorePages()) disabled @endif
+                            class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                        >
+                            Selanjutnya
+                        </button>
+                    </div>
+                @endif
             </div>
         </div>
     @endif
@@ -346,7 +415,7 @@
                     >
                         <option value="">Semua event</option>
                         @foreach ($logEvents as $event)
-                            <option value="{{ $event }}">{{ $event }}</option>
+                            <option value="{{ $event }}">{{ \App\Livewire\Reports\ReportIndex::formatEventName($event) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -367,16 +436,20 @@
                         @forelse ($activityLogs as $log)
                             <tr class="border-b border-slate-100 align-top">
                                 <td class="py-3 whitespace-nowrap text-slate-600">{{ $log->created_at->format('d M Y H:i') }}</td>
-                                <td class="py-3">
+                                <td class="py-3 whitespace-nowrap">
                                     <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-                                        {{ $log->event }}
+                                        {{ \App\Livewire\Reports\ReportIndex::formatEventName($log->event) }}
                                     </span>
                                 </td>
-                                <td class="py-3 font-semibold text-slate-900">{{ $log->description }}</td>
-                                <td class="py-3 text-slate-600">{{ $log->user?->name ?? 'Public' }}</td>
+                                <td class="py-3 font-semibold text-slate-900 whitespace-nowrap">{{ $log->description }}</td>
+                                <td class="py-3 text-slate-600 whitespace-nowrap">{{ $log->user?->name ?? 'Public' }}</td>
                                 <td class="py-3 text-xs text-slate-500">
                                     @if ($log->metadata)
-                                        <code class="break-words">{{ json_encode($log->metadata, JSON_UNESCAPED_SLASHES) }}</code>
+                                        <div class="max-w-[400px]">
+                                            <code class="break-all line-clamp-2 text-xs text-slate-500" title="{{ json_encode($log->metadata, JSON_UNESCAPED_SLASHES) }}">
+                                                {{ json_encode($log->metadata, JSON_UNESCAPED_SLASHES) }}
+                                            </code>
+                                        </div>
                                     @else
                                         -
                                     @endif
@@ -389,6 +462,9 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+            <div class="mt-4">
+                {{ $activityLogs->links() }}
             </div>
         </div>
     @endif

@@ -10,9 +10,12 @@ use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ReportIndex extends Component
 {
+    use WithPagination;
+
     public string $tab = 'sales';
 
     public string $startDate;
@@ -27,6 +30,8 @@ class ReportIndex extends Component
 
     public string $logEvent = '';
 
+    protected string $paginationTheme = 'tailwind';
+
     public function mount(): void
     {
         $this->startDate = now()->startOfMonth()->format('Y-m-d');
@@ -40,6 +45,9 @@ class ReportIndex extends Component
         }
 
         $this->tab = $tab;
+        $this->resetPage('summaryPage');
+        $this->resetPage('movementsPage');
+        $this->resetPage('logsPage');
     }
 
     public function resetFilters(): void
@@ -50,6 +58,51 @@ class ReportIndex extends Component
         $this->movementType = '';
         $this->logSearch = '';
         $this->logEvent = '';
+        $this->resetPage('summaryPage');
+        $this->resetPage('movementsPage');
+        $this->resetPage('logsPage');
+    }
+
+    public function updatedProductSearch(): void
+    {
+        $this->resetPage('movementsPage');
+    }
+
+    public function updatedMovementType(): void
+    {
+        $this->resetPage('movementsPage');
+    }
+
+    public function updatedLogSearch(): void
+    {
+        $this->resetPage('logsPage');
+    }
+
+    public function updatedLogEvent(): void
+    {
+        $this->resetPage('logsPage');
+    }
+
+    public static function formatEventName(string $event): string
+    {
+        $map = [
+            'customer_order.created' => 'Order Pelanggan Baru',
+            'customer_order.preorder_confirmed' => 'Preorder Dikonfirmasi',
+            'product.bulk_prices_updated' => 'Harga Grosir Diperbarui',
+            'product.updated' => 'Produk Diperbarui',
+            'product.created' => 'Produk Baru',
+            'purchase.created' => 'Pembelian Stok',
+            'sale.completed' => 'Penjualan Selesai',
+            'stock.adjusted' => 'Penyesuaian Stok',
+            'supplier.created' => 'Supplier Baru',
+            'supplier.updated' => 'Supplier Diperbarui',
+            'user.created' => 'Pengguna Baru',
+            'user.updated' => 'Pengguna Diperbarui',
+            'customer_order.approved' => 'Order Disetujui',
+            'customer_order.rejected' => 'Order Ditolak',
+        ];
+
+        return $map[$event] ?? ucwords(str_replace(['.', '_'], ' ', $event));
     }
 
     public function render()
@@ -192,7 +245,7 @@ class ReportIndex extends Component
             ->selectRaw('type, SUM(quantity_in) as total_in, SUM(quantity_out) as total_out, COUNT(*) as movement_count')
             ->groupBy('type')
             ->orderBy('type')
-            ->get();
+            ->paginate(3, ['*'], 'summaryPage');
     }
 
     private function recentMovements()
@@ -212,8 +265,7 @@ class ReportIndex extends Component
                 });
             })
             ->latest()
-            ->limit(15)
-            ->get();
+            ->paginate(5, ['*'], 'movementsPage');
     }
 
     private function activityLogs()
@@ -233,8 +285,7 @@ class ReportIndex extends Component
                 });
             })
             ->latest()
-            ->limit(30)
-            ->get();
+            ->paginate(10, ['*'], 'logsPage');
     }
 
     private function applySalesDateFilter(Builder $query): Builder
