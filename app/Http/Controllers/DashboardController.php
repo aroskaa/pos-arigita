@@ -29,7 +29,7 @@ class DashboardController extends Controller
             ->where('minimum_stock', '>', 0)
             ->whereColumn('stock', '<=', 'minimum_stock')
             ->orderBy('stock')
-            ->limit(8)
+            ->limit(3)
             ->get();
 
         return view('dashboard', [
@@ -49,7 +49,7 @@ class DashboardController extends Controller
             'pendingOrders' => CustomerOrder::query()
                 ->whereIn('status', ['pending', 'preorder'])
                 ->latest()
-                ->limit(8)
+                ->limit(3)
                 ->get(),
             'salesByDay' => Sale::query()
                 ->where('status', 'completed')
@@ -61,7 +61,7 @@ class DashboardController extends Controller
             'recentActivities' => ActivityLog::query()
                 ->with('user')
                 ->latest()
-                ->limit(8)
+                ->limit(15)
                 ->get(),
         ]);
     }

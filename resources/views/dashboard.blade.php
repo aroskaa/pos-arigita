@@ -67,7 +67,14 @@
         </div>
 
         <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 class="text-lg font-bold text-slate-900">Order Baru</h3>
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-900">Order Baru</h3>
+                @if ($pendingOrderCount > 3)
+                    <a href="{{ route('customer-orders.index') }}" class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 transition">
+                        Lihat Semua ({{ $pendingOrderCount }})
+                    </a>
+                @endif
+            </div>
             <div class="mt-5 space-y-3">
                 @forelse ($pendingOrders as $order)
                     <a href="{{ route('customer-orders.index') }}" class="block rounded-2xl border border-slate-100 p-4 hover:border-blue-200 hover:bg-blue-50">
@@ -88,9 +95,24 @@
         </div>
     </div>
 
-    <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+    <div class="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2 items-start">
         <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 class="text-lg font-bold text-slate-900">Stok Menipis</h3>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Stok Menipis</h3>
+                    @if ($lowStockCount > 3)
+                        <p class="text-xs font-semibold text-amber-700 mt-1">
+                            Ada {{ $lowStockCount }} produk dengan stok kritis
+                        </p>
+                    @endif
+                </div>
+
+                @if ($lowStockCount > 3)
+                    <a href="{{ route('products.index') }}" class="rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition">
+                        Kelola Produk →
+                    </a>
+                @endif
+            </div>
             <div class="mt-5 space-y-3">
                 @forelse ($lowStockProducts as $product)
                     <div class="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 p-4">
@@ -110,11 +132,11 @@
             </div>
         </div>
 
-        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm" x-data="{ page: 1, perPage: 5 }">
             <h3 class="text-lg font-bold text-slate-900">Aktivitas Terbaru</h3>
             <div class="mt-5 space-y-3">
-                @forelse ($recentActivities as $activity)
-                    <div class="rounded-2xl border border-slate-100 p-4">
+                @forelse ($recentActivities as $index => $activity)
+                    <div class="rounded-2xl border border-slate-100 p-4" x-show="Math.ceil(({{ $index }} + 1) / perPage) === page">
                         <div class="flex items-center justify-between gap-3">
                             <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{{ $activity->event }}</span>
                             <span class="text-xs text-slate-500">{{ $activity->created_at->format('d M Y H:i') }}</span>
@@ -128,6 +150,18 @@
                     </div>
                 @endforelse
             </div>
+
+            @if(count($recentActivities) > 5)
+                <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+                    <button type="button" @click="if(page > 1) page--" :disabled="page === 1" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50">
+                        Sebelumnya
+                    </button>
+                    <span class="text-xs font-bold text-slate-500">Halaman <span x-text="page"></span> dari <span x-text="Math.ceil({{ count($recentActivities) }} / perPage)"></span></span>
+                    <button type="button" @click="if(page < Math.ceil({{ count($recentActivities) }} / perPage)) page++" :disabled="page === Math.ceil({{ count($recentActivities) }} / perPage)" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50">
+                        Selanjutnya
+                    </button>
+                </div>
+            @endif
         </div>
     </div>
 </x-pos-layout>
