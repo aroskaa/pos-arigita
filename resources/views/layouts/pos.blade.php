@@ -23,16 +23,16 @@
                 </div>
             </div>
 
-            <nav class="mt-8 space-y-7 px-4">
+            <nav class="mt-4 flex-1 space-y-4 px-4">
                 {{-- UTAMA --}}
                 <div>
-                    <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <p class="mb-1 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                         Utama
                     </p>
 
-                    <div class="space-y-1">
+                    <div class="space-y-0.5">
                         <a href="{{ route('dashboard') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                        class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                 {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                             <span>🏠</span>
                             <span>Dashboard</span>
@@ -42,14 +42,14 @@
 
                 {{-- TRANSAKSI --}}
                 <div>
-                    <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <p class="mb-1 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                         Transaksi
                     </p>
 
-                    <div class="space-y-1">
+                    <div class="space-y-0.5">
                         @if(auth()->user()->hasRole(['owner', 'admin', 'cashier']))
                             <a href="{{ route('pos.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>🧾</span>
                                 <span>POS Transaksi</span>
@@ -58,7 +58,7 @@
 
                         @if(auth()->user()->hasRole(['owner', 'admin']))
                             <a href="{{ route('customer-orders.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('customer-orders.index') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>🛒</span>
                                 <span class="flex-1">Order Pelanggan</span>
@@ -71,7 +71,7 @@
                         @endif
 
                         <a href="{{ route('sales.index') }}"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                        class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                 {{ request()->routeIs('sales.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                             <span>📄</span>
                             <span>Riwayat Transaksi</span>
@@ -82,13 +82,13 @@
                 @if(auth()->user()->hasRole(['owner', 'admin']))
                     {{-- MASTER DATA --}}
                     <div>
-                        <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <p class="mb-1 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                             Master Data
                         </p>
 
-                        <div class="space-y-1">
+                        <div class="space-y-0.5">
                             <a href="{{ route('products.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('products.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>📦</span>
                                 <span class="flex-1">Produk & Stok</span>
@@ -100,14 +100,14 @@
                             </a>
 
                             <a href="{{ route('suppliers.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('suppliers.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>🚚</span>
                                 <span>Supplier</span>
                             </a>
 
                             <a href="{{ route('purchases.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('purchases.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>📥</span>
                                 <span>Pembelian</span>
@@ -115,7 +115,7 @@
 
                             @if(auth()->user()->isOwner())
                                 <a href="{{ route('users.index') }}"
-                                class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                                class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                         {{ request()->routeIs('users.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                     <span>👥</span>
                                     <span>Pengguna</span>
@@ -126,27 +126,27 @@
 
                     {{-- PERSEDIAAN --}}
                     <div>
-                        <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <p class="mb-1 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                             Persediaan
                         </p>
 
-                        <div class="space-y-1">
+                        <div class="space-y-0.5">
                             <a href="{{ route('stock-movements.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('stock-movements.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>📋</span>
                                 <span>Kartu Stok</span>
                             </a>
 
                             <a href="{{ route('stock-adjustments.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('stock-adjustments.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>🛠️</span>
                                 <span>Stock Adjustment</span>
                             </a>
 
                             <a href="{{ route('stock-daily-recaps.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('stock-daily-recaps.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>🧮</span>
                                 <span>Rekap Stok</span>
@@ -156,13 +156,13 @@
 
                     {{-- ANALITIK --}}
                     <div>
-                        <p class="mb-2 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <p class="mb-1 px-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                             Analitik
                         </p>
 
-                        <div class="space-y-1">
+                        <div class="space-y-0.5">
                             <a href="{{ route('reports.index') }}"
-                            class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition
+                            class="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-medium transition
                                     {{ request()->routeIs('reports.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                                 <span>📊</span>
                                 <span>Laporan</span>
@@ -196,9 +196,64 @@
 
                 <div class="hidden md:flex items-center gap-3">
                     @if(($posNotifications['total_count'] ?? 0) > 0)
-                        <div class="flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-sm font-bold text-red-700">
-                            <span>{{ $posNotifications['total_count'] }}</span>
-                            <span>Notifikasi</span>
+                        <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                            <div class="flex items-center gap-2 rounded-full bg-red-50 px-4 py-2 text-sm font-bold text-red-700 cursor-pointer">
+                                <span>{{ $posNotifications['total_count'] }}</span>
+                                <span>Notifikasi</span>
+                                <svg class="h-4 w-4 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+
+                            <div
+                                x-show="open"
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-150"
+                                x-transition:enter-start="opacity-0 translate-y-1"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-100"
+                                x-transition:leave-start="opacity-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 translate-y-1"
+                                class="absolute right-0 top-full mt-2 w-80 rounded-2xl border border-slate-200 bg-white shadow-xl z-50"
+                            >
+                                @if(($posNotifications['pending_orders_count'] ?? 0) > 0)
+                                    <div class="border-b border-slate-100 p-4">
+                                        <p class="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Order Masuk</p>
+                                        <div class="space-y-2">
+                                            @foreach($posNotifications['latest_pending_orders'] as $order)
+                                                <a href="{{ route('customer-orders.index') }}" class="flex items-center justify-between rounded-xl bg-red-50 px-3 py-2 hover:bg-red-100 transition">
+                                                    <div>
+                                                        <p class="text-sm font-semibold text-slate-900">{{ $order->customer_name ?: 'Walk-in' }}</p>
+                                                        <p class="text-xs text-slate-500">{{ $order->order_number }}</p>
+                                                    </div>
+                                                    <span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold uppercase text-red-700">{{ $order->status }}</span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                        @if($posNotifications['pending_orders_count'] > 3)
+                                            <a href="{{ route('customer-orders.index') }}" class="mt-2 block text-center text-xs font-semibold text-blue-700 hover:text-blue-900">Lihat semua ({{ $posNotifications['pending_orders_count'] }})</a>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                @if(($posNotifications['low_stock_count'] ?? 0) > 0)
+                                    <div class="p-4">
+                                        <p class="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Stok Rendah</p>
+                                        <div class="space-y-2">
+                                            @foreach($posNotifications['low_stock_products'] as $product)
+                                                <a href="{{ route('products.index') }}" class="flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2 hover:bg-amber-100 transition">
+                                                    <div>
+                                                        <p class="text-sm font-semibold text-slate-900">{{ $product->name }}</p>
+                                                        <p class="text-xs text-slate-500">Min: {{ $product->minimum_stock }} {{ $product->unit?->abbreviation }}</p>
+                                                    </div>
+                                                    <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">{{ $product->stock }} {{ $product->unit?->abbreviation }}</span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                        @if($posNotifications['low_stock_count'] > 3)
+                                            <a href="{{ route('products.index') }}" class="mt-2 block text-center text-xs font-semibold text-blue-700 hover:text-blue-900">Lihat semua ({{ $posNotifications['low_stock_count'] }})</a>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     @else
                         <div class="rounded-full bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700">
