@@ -132,7 +132,7 @@
             </div>
         </div>
 
-        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm" x-data="{ page: 1, perPage: 5 }">
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm" x-data="{ page: 1, perPage: 3 }">
             <h3 class="text-lg font-bold text-slate-900">Aktivitas Terbaru</h3>
             <div class="mt-5 space-y-3">
                 @forelse ($recentActivities as $index => $activity)
@@ -151,7 +151,7 @@
                 @endforelse
             </div>
 
-            @if(count($recentActivities) > 5)
+            @if(count($recentActivities) > 3)
                 <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
                     <button type="button" @click="if(page > 1) page--" :disabled="page === 1" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50">
                         Sebelumnya

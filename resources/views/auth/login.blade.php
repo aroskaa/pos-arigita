@@ -121,141 +121,145 @@
             <form method="POST" action="{{ route('register') }}" id="register-form">
                 @csrf
 
-                <!-- Name -->
-                <div class="clay-field">
-                    <label for="reg-name">Nama Lengkap</label>
-                    <input id="reg-name"
-                           class="clay-input"
-                           type="text"
-                           name="name"
-                           value="{{ old('name') }}"
-                           required
-                           autocomplete="name"
-                           placeholder="Nama lengkap Anda">
-                    @if ($errors->has('name'))
-                        <ul class="clay-error">
-                            @foreach ($errors->get('name') as $message)
-                                <li>{{ $message }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0">
+                    <!-- Name -->
+                    <div class="clay-field">
+                        <label for="reg-name">Nama Lengkap</label>
+                        <input id="reg-name"
+                               class="clay-input"
+                               type="text"
+                               name="name"
+                               value="{{ old('name') }}"
+                               required
+                               autocomplete="name"
+                               placeholder="Nama lengkap Anda">
+                        @if ($errors->has('name'))
+                            <ul class="clay-error">
+                                @foreach ($errors->get('name') as $message)
+                                    <li>{{ $message }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
 
-                <!-- Email Address -->
-                <div class="clay-field">
-                    <label for="reg-email">Email</label>
-                    <input id="reg-email"
-                           class="clay-input"
-                           type="email"
-                           name="email"
-                           value="{{ old('email') }}"
-                           required
-                           autocomplete="username"
-                           placeholder="nama@email.com">
-                    @if ($errors->has('email') && ($activeTab ?? 'login') === 'register')
-                        <ul class="clay-error">
-                            @foreach ($errors->get('email') as $message)
-                                <li>{{ $message }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
+                    <!-- Email Address -->
+                    <div class="clay-field">
+                        <label for="reg-email">Email</label>
+                        <input id="reg-email"
+                               class="clay-input"
+                               type="email"
+                               name="email"
+                               value="{{ old('email') }}"
+                               required
+                               autocomplete="username"
+                               placeholder="nama@email.com">
+                        @if ($errors->has('email') && ($activeTab ?? 'login') === 'register')
+                            <ul class="clay-error">
+                                @foreach ($errors->get('email') as $message)
+                                    <li>{{ $message }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
 
-                <!-- Customer Type -->
-                <div class="clay-field">
-                    <label for="customer_type">Tipe Pelanggan</label>
-                    <select id="customer_type" name="customer_type" class="clay-input">
-                        <option value="personal" @selected(old('customer_type', 'personal') === 'personal')>🧑 Perorangan</option>
-                        <option value="store" @selected(old('customer_type') === 'store')>🏪 Toko</option>
-                    </select>
-                    @if ($errors->has('customer_type'))
-                        <ul class="clay-error">
-                            @foreach ($errors->get('customer_type') as $message)
-                                <li>{{ $message }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
+                    <!-- Customer Type -->
+                    <div class="clay-field">
+                        <label for="customer_type">Tipe Pelanggan</label>
+                        <select id="customer_type" name="customer_type" class="clay-input">
+                            <option value="personal" @selected(old('customer_type', 'personal') === 'personal')>🧑 Perorangan</option>
+                            <option value="store" @selected(old('customer_type') === 'store')>🏪 Toko</option>
+                        </select>
+                        @if ($errors->has('customer_type'))
+                            <ul class="clay-error">
+                                @foreach ($errors->get('customer_type') as $message)
+                                    <li>{{ $message }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
 
-                <!-- Phone -->
-                <div class="clay-field">
-                    <label for="phone">Nomor HP</label>
-                    <input id="phone"
-                           class="clay-input"
-                           type="text"
-                           name="phone"
-                           value="{{ old('phone') }}"
-                           inputmode="numeric"
-                           autocomplete="tel"
-                           placeholder="08xxxxxxxxxx">
-                    @if ($errors->has('phone'))
-                        <ul class="clay-error">
-                            @foreach ($errors->get('phone') as $message)
-                                <li>{{ $message }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
+                    <!-- Phone -->
+                    <div class="clay-field">
+                        <label for="phone">Nomor HP</label>
+                        <input id="phone"
+                               class="clay-input"
+                               type="text"
+                               name="phone"
+                               value="{{ old('phone') }}"
+                               inputmode="numeric"
+                               autocomplete="tel"
+                               placeholder="08xxxxxxxxxx">
+                        @if ($errors->has('phone'))
+                            <ul class="clay-error">
+                                @foreach ($errors->get('phone') as $message)
+                                    <li>{{ $message }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
 
-                <!-- Address -->
-                <div class="clay-field">
-                    <label for="address">Alamat</label>
-                    <textarea id="address"
-                              name="address"
-                              rows="3"
-                              class="clay-input"
-                              placeholder="Alamat lengkap Anda">{{ old('address') }}</textarea>
-                    @if ($errors->has('address'))
-                        <ul class="clay-error">
-                            @foreach ($errors->get('address') as $message)
-                                <li>{{ $message }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
+                    <!-- Address (Full Width) -->
+                    <div class="clay-field sm:col-span-2">
+                        <label for="address">Alamat</label>
+                        <textarea id="address"
+                                  name="address"
+                                  rows="2"
+                                  class="clay-input"
+                                  placeholder="Alamat lengkap Anda">{{ old('address') }}</textarea>
+                        @if ($errors->has('address'))
+                            <ul class="clay-error">
+                                @foreach ($errors->get('address') as $message)
+                                    <li>{{ $message }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
 
-                <!-- Password -->
-                <div class="clay-field">
-                    <label for="reg-password">Password</label>
-                    <input id="reg-password"
-                           class="clay-input"
-                           type="password"
-                           name="password"
-                           required
-                           autocomplete="new-password"
-                           placeholder="Minimal 8 karakter">
-                    @if ($errors->has('password') && ($activeTab ?? 'login') === 'register')
-                        <ul class="clay-error">
-                            @foreach ($errors->get('password') as $message)
-                                <li>{{ $message }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
+                    <!-- Password -->
+                    <div class="clay-field">
+                        <label for="reg-password">Password</label>
+                        <input id="reg-password"
+                               class="clay-input"
+                               type="password"
+                               name="password"
+                               required
+                               autocomplete="new-password"
+                               placeholder="Minimal 8 karakter">
+                        @if ($errors->has('password') && ($activeTab ?? 'login') === 'register')
+                            <ul class="clay-error">
+                                @foreach ($errors->get('password') as $message)
+                                    <li>{{ $message }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
 
-                <!-- Confirm Password -->
-                <div class="clay-field">
-                    <label for="password_confirmation">Konfirmasi Password</label>
-                    <input id="password_confirmation"
-                           class="clay-input"
-                           type="password"
-                           name="password_confirmation"
-                           required
-                           autocomplete="new-password"
-                           placeholder="Ulangi password">
-                    @if ($errors->has('password_confirmation'))
-                        <ul class="clay-error">
-                            @foreach ($errors->get('password_confirmation') as $message)
-                                <li>{{ $message }}</li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
+                    <!-- Confirm Password -->
+                    <div class="clay-field">
+                        <label for="password_confirmation">Konfirmasi Password</label>
+                        <input id="password_confirmation"
+                               class="clay-input"
+                               type="password"
+                               name="password_confirmation"
+                               required
+                               autocomplete="new-password"
+                               placeholder="Ulangi password">
+                        @if ($errors->has('password_confirmation'))
+                            <ul class="clay-error">
+                                @foreach ($errors->get('password_confirmation') as $message)
+                                    <li>{{ $message }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
 
-                <!-- Submit -->
-                <button type="submit" class="clay-btn" id="register-submit">
-                    Daftar Sekarang →
-                </button>
+                    <!-- Submit (Full Width) -->
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="clay-btn" id="register-submit">
+                            Daftar Sekarang →
+                        </button>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
