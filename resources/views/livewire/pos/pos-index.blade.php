@@ -496,6 +496,97 @@
                         </div>
                     </div>
 
+                    @if ($paymentMethod === 'cash')
+                        <div class="mt-4">
+                            <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                Uang Diterima
+                            </label>
+                            <div
+                                x-data="{
+                                    raw: 0,
+                                    display: '',
+                                    grandTotal: {{ (int) $grandTotal }},
+                                    format(value) {
+                                        const number = String(value ?? '').replace(/\D/g, '');
+
+                                        if (number === '') {
+                                            this.display = '';
+                                            this.raw = 0;
+                                            return;
+                                        }
+
+                                        const val = parseInt(number, 10);
+                                        this.raw = val;
+                                        this.display = new Intl.NumberFormat('id-ID').format(val);
+                                    },
+                                    applyPaid() {
+                                        const id = this.$el.closest('[wire\\:id]').getAttribute('wire:id');
+                                        window.Livewire.find(id).set('paidAmount', this.raw);
+                                    },
+                                    get change() {
+                                        return Math.max(0, this.raw - this.grandTotal);
+                                    },
+                                    get isEnough() {
+                                        return this.raw >= this.grandTotal;
+                                    }
+                                }"
+                                x-init="format(raw)"
+                                class="space-y-3"
+                            >
+                                <div class="relative">
+                                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">
+                                        Rp
+                                    </span>
+
+                                    <input
+                                        x-ref="paidAmountInput"
+                                        type="text"
+                                        inputmode="numeric"
+                                        x-model="display"
+                                        x-on:input="format($event.target.value); applyPaid()"
+                                        x-on:keydown.enter.prevent="applyPaid()"
+                                        placeholder="0"
+                                        autofocus
+                                        class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                    >
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <template x-for="amount in [{{ (int) $grandTotal }}, {{ (int) ceil($grandTotal / 10000) * 10000 }}, {{ (int) ceil($grandTotal / 50000) * 50000 }}, {{ (int) ceil($grandTotal / 100000) * 100000 }}]" :key="amount">
+                                        <button
+                                            type="button"
+                                            x-show="amount >= grandTotal"
+                                            x-on:click="raw = amount; format(amount); applyPaid()"
+                                            x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(amount)"
+                                            class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition"
+                                        ></button>
+                                    </template>
+                                </div>
+
+                                <div
+                                    x-show="raw > 0"
+                                    x-cloak
+                                    class="rounded-2xl p-4 transition-colors"
+                                    x-bind:class="isEnough ? 'bg-green-50' : 'bg-red-50'"
+                                >
+                                    <div class="flex items-center justify-between">
+                                        <span
+                                            class="text-sm font-semibold"
+                                            x-bind:class="isEnough ? 'text-green-700' : 'text-red-700'"
+                                        >Kembalian</span>
+                                        <span
+                                            class="text-lg font-bold"
+                                            x-bind:class="isEnough ? 'text-green-900' : 'text-red-900'"
+                                            x-text="isEnough
+                                                ? 'Rp ' + new Intl.NumberFormat('id-ID').format(change)
+                                                : 'Kurang Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal - raw)"
+                                        ></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <p class="mt-4 text-sm text-slate-500">
                         Setelah dikonfirmasi, sistem akan menyimpan transaksi, membuat invoice, dan mengurangi stok produk secara otomatis.
                     </p>
@@ -517,6 +608,40 @@
                         class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                     >
                         Ya, Proses Transaksi
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($showChangeModal && $completedSaleId)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+            <div class="w-full max-w-md rounded-3xl bg-white shadow-2xl">
+                <div class="p-8 text-center">
+                    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                        <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-slate-900">Transaksi Berhasil</h3>
+                    <p class="mt-1 text-sm text-slate-500">Invoice {{ $completedInvoiceNumber }}</p>
+
+                    <div class="mt-6 rounded-2xl bg-amber-50 border border-amber-200 p-5">
+                        <p class="text-sm font-semibold text-amber-700 mb-1">Kembalian untuk customer</p>
+                        <p class="text-3xl font-bold text-amber-900">
+                            Rp {{ number_format($completedChangeAmount, 0, ',', '.') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center gap-3 border-t border-slate-100 px-6 py-5">
+                    <button
+                        type="button"
+                        wire:click="closeChangeModal"
+                        class="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+                    >
+                        Lanjut
                     </button>
                 </div>
             </div>

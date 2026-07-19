@@ -28,6 +28,12 @@ class PosIndex extends Component
 
     public bool $showReceiptModal = false;
 
+    public bool $showChangeModal = false;
+
+    public $paidAmount = 0;
+
+    public $completedChangeAmount = 0;
+
     public ?int $completedSaleId = null;
 
     public ?string $completedInvoiceNumber = null;
@@ -282,6 +288,10 @@ class PosIndex extends Component
         $this->validateCustomerData();
         $this->validateDiscountAndPayment();
 
+        if ($this->paymentMethod === 'cash') {
+            $this->paidAmount = 0;
+        }
+
         $this->showConfirmModal = true;
     }
 
@@ -290,11 +300,19 @@ class PosIndex extends Component
         $this->showConfirmModal = false;
     }
 
+    public function closeChangeModal(): void
+    {
+        $this->showChangeModal = false;
+        $this->showReceiptModal = true;
+    }
+
     public function closeReceiptModal(): void
     {
         $this->showReceiptModal = false;
+        $this->showChangeModal = false;
         $this->completedSaleId = null;
         $this->completedInvoiceNumber = null;
+        $this->completedChangeAmount = 0;
     }
 
     public function saveTransaction(): void
@@ -302,12 +320,23 @@ class PosIndex extends Component
         $this->validateCustomerData();
         $this->validateDiscountAndPayment();
 
-        $this->showConfirmModal = false;
-
         if (count($this->cart) === 0) {
+            $this->showConfirmModal = false;
             Session::flash('error', 'Keranjang masih kosong.');
             return;
         }
+
+        $grandTotal = $this->grandTotal();
+
+        if ($this->paymentMethod === 'cash') {
+            $paid = $this->currencyToNumber($this->paidAmount);
+            if ($paid < $grandTotal) {
+                Session::flash('error', 'Uang yang dibayarkan kurang dari grand total.');
+                return;
+            }
+        }
+
+        $this->showConfirmModal = false;
         
         DB::beginTransaction();
 
@@ -325,6 +354,14 @@ class PosIndex extends Component
             $subtotal = $this->subtotal();
             $discountTotal = $this->discountTotal();
             $grandTotal = $this->grandTotal();
+
+            $paidAmount = $grandTotal;
+            $changeAmount = 0;
+
+            if ($this->paymentMethod === 'cash') {
+                $paidAmount = (float) $this->currencyToNumber($this->paidAmount);
+                $changeAmount = max(0, $paidAmount - $grandTotal);
+            }
 
             $customerId = $this->selectedCustomerId;
 
@@ -349,8 +386,8 @@ class PosIndex extends Component
                 'subtotal' => $subtotal,
                 'discount_total' => $discountTotal,
                 'grand_total' => $grandTotal,
-                'paid_amount' => $grandTotal,
-                'change_amount' => 0,
+                'paid_amount' => $paidAmount,
+                'change_amount' => $changeAmount,
                 'payment_method' => $this->paymentMethod,
                 'status' => 'completed',
                 'note' => null,
@@ -454,9 +491,16 @@ class PosIndex extends Component
             ]);
 
             $this->customerType = 'personal';
+            $this->completedChangeAmount = $changeAmount;
             $this->globalDiscount = 0;
+            $this->paidAmount = 0;
             $this->paymentMethod = 'cash';
-            $this->showReceiptModal = true;
+
+            if ($changeAmount > 0) {
+                $this->showChangeModal = true;
+            } else {
+                $this->showReceiptModal = true;
+            }
 
             $this->dispatch('$refresh');
 
