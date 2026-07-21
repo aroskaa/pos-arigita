@@ -30,7 +30,10 @@ class ProductIndex extends Component
     public ?string $description = null;
 
     public int|string|null $category_id = null;
+    public string $categoryInput = '';
+
     public int|string|null $unit_id = null;
+    public string $unitInput = '';
 
     public ?int $purchase_price = null;
     public ?int $selling_price = null;
@@ -51,8 +54,8 @@ class ProductIndex extends Component
             'name' => ['required', 'string', 'max:255'],
             'sku' => ['required', 'string', 'max:255'],
             'barcode' => ['nullable', 'string', 'max:255'],
-            'category_id' => ['required', 'exists:categories,id'],
-            'unit_id' => ['required', 'exists:units,id'],
+            'categoryInput' => ['required', 'string', 'max:255'],
+            'unitInput' => ['required', 'string', 'max:255'],
             'purchase_price' => ['required', 'integer', 'min:0'],
             'selling_price' => ['required', 'integer', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
@@ -65,10 +68,8 @@ class ProductIndex extends Component
         return [
             'name.required' => 'Nama produk wajib diisi.',
             'sku.required' => 'SKU wajib diisi.',
-            'category_id.required' => 'Kategori wajib dipilih.',
-            'category_id.exists' => 'Kategori tidak valid.',
-            'unit_id.required' => 'Satuan wajib dipilih.',
-            'unit_id.exists' => 'Satuan tidak valid.',
+            'categoryInput.required' => 'Kategori wajib diisi.',
+            'unitInput.required' => 'Satuan wajib diisi.',
             'purchase_price.required' => 'Harga beli wajib diisi.',
             'purchase_price.integer' => 'Harga beli harus berupa angka.',
             'selling_price.required' => 'Harga jual wajib diisi.',
@@ -120,7 +121,7 @@ class ProductIndex extends Component
     public function edit(int $id): void
     {
         /** @var Product $product */
-        $product = Product::query()->findOrFail($id);
+        $product = Product::query()->with(['category', 'unit'])->findOrFail($id);
 
         $this->resetValidation();
 
@@ -130,7 +131,9 @@ class ProductIndex extends Component
         $this->barcode = $product->barcode;
         $this->description = $product->description;
         $this->category_id = $product->category_id;
+        $this->categoryInput = $product->category?->name ?? '';
         $this->unit_id = $product->unit_id;
+        $this->unitInput = $product->unit?->name ?? '';
         $this->purchase_price = (int) $product->purchase_price;
         $this->selling_price = (int) $product->selling_price;
         $this->stock = $product->stock;
@@ -144,26 +147,51 @@ class ProductIndex extends Component
     {
         $validated = $this->validate();
 
+        $categoryName = trim((string) $validated['categoryInput']);
+        $category = Category::query()
+            ->whereRaw('LOWER(name) = ?', [strtolower($categoryName)])
+            ->first();
+
+        if (! $category) {
+            $category = Category::query()->create([
+                'name' => $categoryName,
+                'slug' => Str::slug($categoryName),
+                'is_active' => true,
+            ]);
+        }
+
+        $unitName = trim((string) $validated['unitInput']);
+        $unit = Unit::query()
+            ->whereRaw('LOWER(name) = ?', [strtolower($unitName)])
+            ->first();
+
+        if (! $unit) {
+            $unit = Unit::query()->create([
+                'name' => $unitName,
+                'abbreviation' => strtoupper(substr($unitName, 0, 4)),
+            ]);
+        }
+
         if ($this->productId) {
             $product = Product::query()->findOrFail($this->productId);
 
             $product->update([
-                    'category_id' => (int) $validated['category_id'],
-                    'unit_id' => (int) $validated['unit_id'],
-                    'name' => $validated['name'],
-                    'slug' => Str::slug($validated['name']),
-                    'sku' => $validated['sku'],
-                    'barcode' => $validated['barcode'] ?? null,
-                    'description' => $this->description,
-                    'purchase_price' => (int) $validated['purchase_price'],
-                    'selling_price' => (int) $validated['selling_price'],
+                'category_id' => $category->id,
+                'unit_id' => $unit->id,
+                'name' => $validated['name'],
+                'slug' => Str::slug($validated['name']),
+                'sku' => $validated['sku'],
+                'barcode' => $validated['barcode'] ?? null,
+                'description' => $this->description,
+                'purchase_price' => (int) $validated['purchase_price'],
+                'selling_price' => (int) $validated['selling_price'],
 
-                    // average_cost tidak ikut diubah saat edit produk,
-                    // karena nilai ini sudah dipengaruhi pembelian dan moving average.
+                // average_cost tidak ikut diubah saat edit produk,
+                // karena nilai ini sudah dipengaruhi pembelian dan moving average.
 
-                    'minimum_stock' => (int) $validated['minimum_stock'],
-                    'is_active' => $this->is_active,
-                ]);
+                'minimum_stock' => (int) $validated['minimum_stock'],
+                'is_active' => $this->is_active,
+            ]);
 
             ActivityLogger::log(
                 'product.updated',
@@ -178,8 +206,8 @@ class ProductIndex extends Component
             );
         } else {
             $product = Product::query()->create([
-                'category_id' => (int) $validated['category_id'],
-                'unit_id' => (int) $validated['unit_id'],
+                'category_id' => $category->id,
+                'unit_id' => $unit->id,
                 'name' => $validated['name'],
                 'slug' => Str::slug($validated['name']),
                 'sku' => $validated['sku'],
@@ -431,7 +459,9 @@ class ProductIndex extends Component
             'barcode',
             'description',
             'category_id',
+            'categoryInput',
             'unit_id',
+            'unitInput',
             'purchase_price',
             'selling_price',
             'stock',
@@ -440,7 +470,9 @@ class ProductIndex extends Component
         ]);
 
         $this->category_id = null;
+        $this->categoryInput = '';
         $this->unit_id = null;
+        $this->unitInput = '';
         $this->purchase_price = null;
         $this->selling_price = null;
         $this->stock = null;
@@ -459,6 +491,39 @@ class ProductIndex extends Component
         );
 
         $this->barcode = $barcode;
+
+        $this->dispatch('$refresh');
+    }
+
+    public function generateSku(): void
+    {
+        $name = trim((string) $this->name);
+
+        if ($name !== '') {
+            $words = preg_split('/\s+/', $name);
+            $parts = array_filter(array_map(
+                fn ($w) => strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $w), 0, 3)),
+                $words
+            ));
+            $base = 'AG-' . implode('-', $parts);
+        } else {
+            $base = 'AG-' . strtoupper(Str::random(6));
+        }
+
+        $candidate = $base;
+        $counter = 2;
+
+        while (
+            Product::query()
+                ->where('sku', '=', $candidate)
+                ->when($this->productId, fn ($q) => $q->where('id', '!=', $this->productId))
+                ->exists()
+        ) {
+            $candidate = $base . '-' . $counter;
+            $counter++;
+        }
+
+        $this->sku = $candidate;
 
         $this->dispatch('$refresh');
     }

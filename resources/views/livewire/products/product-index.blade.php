@@ -154,7 +154,7 @@
                         <label class="mb-2 block text-sm font-semibold text-slate-700">Nama Produk</label>
                         <input
                             type="text"
-                            wire:model="name"
+                            wire:model.blur="name"
                             class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         >
                         @error('name')
@@ -164,11 +164,26 @@
 
                     <div>
                         <label class="mb-2 block text-sm font-semibold text-slate-700">SKU</label>
-                        <input
-                            type="text"
-                            wire:model="sku"
-                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                        >
+
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                wire:model="sku"
+                                placeholder="Auto-generate atau isi manual"
+                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            >
+
+                            <button
+                                type="button"
+                                wire:click="generateSku"
+                                wire:loading.attr="disabled"
+                                wire:target="generateSku"
+                                class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50"
+                            >
+                                Generate
+                            </button>
+                        </div>
+
                         @error('sku')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
@@ -208,34 +223,104 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div
+                        x-data="{
+                            open: false,
+                            value: @entangle('categoryInput').live,
+                            options: @js($categories->pluck('name')),
+                            get filteredOptions() {
+                                if (!this.value) return this.options;
+                                return this.options.filter(i => i.toLowerCase().includes(this.value.toLowerCase()));
+                            },
+                            selectOption(opt) {
+                                this.value = opt;
+                                this.open = false;
+                            }
+                        }"
+                        class="relative"
+                        @click.outside="open = false"
+                    >
                         <label class="mb-2 block text-sm font-semibold text-slate-700">Kategori</label>
-                        <select
-                            wire:model="category_id"
+
+                        <input
+                            type="text"
+                            x-model="value"
+                            @focus="open = true"
+                            @input="open = true"
+                            placeholder="Cari atau ketik kategori baru..."
                             class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         >
-                            <option value="">Pilih kategori</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('category_id')
+
+                        <div
+                            x-show="open && (filteredOptions.length > 0 || value)"
+                            x-cloak
+                            class="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl"
+                        >
+                            <template x-for="opt in filteredOptions" :key="opt">
+                                <button
+                                    type="button"
+                                    @mousedown.prevent="selectOption(opt)"
+                                    class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                                    x-text="opt"
+                                ></button>
+                            </template>
+                            <div x-show="filteredOptions.length === 0 && value" class="px-4 py-2.5 text-xs text-slate-400 italic">
+                                Kategori baru "<span x-text="value"></span>" akan dibuat saat disimpan.
+                            </div>
+                        </div>
+
+                        @error('categoryInput')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div>
+                    <div
+                        x-data="{
+                            open: false,
+                            value: @entangle('unitInput').live,
+                            options: @js($units->pluck('name')),
+                            get filteredOptions() {
+                                if (!this.value) return this.options;
+                                return this.options.filter(i => i.toLowerCase().includes(this.value.toLowerCase()));
+                            },
+                            selectOption(opt) {
+                                this.value = opt;
+                                this.open = false;
+                            }
+                        }"
+                        class="relative"
+                        @click.outside="open = false"
+                    >
                         <label class="mb-2 block text-sm font-semibold text-slate-700">Satuan</label>
-                        <select
-                            wire:model="unit_id"
+
+                        <input
+                            type="text"
+                            x-model="value"
+                            @focus="open = true"
+                            @input="open = true"
+                            placeholder="Cari atau ketik satuan baru..."
                             class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         >
-                            <option value="">Pilih satuan</option>
-                            @foreach ($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('unit_id')
+
+                        <div
+                            x-show="open && (filteredOptions.length > 0 || value)"
+                            x-cloak
+                            class="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl"
+                        >
+                            <template x-for="opt in filteredOptions" :key="opt">
+                                <button
+                                    type="button"
+                                    @mousedown.prevent="selectOption(opt)"
+                                    class="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition"
+                                    x-text="opt"
+                                ></button>
+                            </template>
+                            <div x-show="filteredOptions.length === 0 && value" class="px-4 py-2.5 text-xs text-slate-400 italic">
+                                Satuan baru "<span x-text="value"></span>" akan dibuat saat disimpan.
+                            </div>
+                        </div>
+
+                        @error('unitInput')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
