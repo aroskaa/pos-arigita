@@ -14,6 +14,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
 
         <style>
             *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -340,5 +341,7 @@
                 {{ $slot }}
             </div>
         </div>
+
+        @livewireScripts
     </body>
 </html>

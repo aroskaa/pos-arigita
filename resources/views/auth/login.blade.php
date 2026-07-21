@@ -1,13 +1,14 @@
 <x-guest-layout>
     <div x-data="{
-        tab: '{{ $activeTab ?? (($errors->has('name') || $errors->has('customer_type') || $errors->has('phone') || $errors->has('address') || $errors->has('password_confirmation')) ? 'register' : 'login') }}'
-    }">
+        tab: '{{ ($activeTab ?? null) === 'register' || old('name') || old('phone') || old('address') || $errors->has('name') || $errors->has('customer_type') || $errors->has('phone') || $errors->has('address') || $errors->has('password_confirmation') ? 'register' : 'login' }}'
+    }" id="auth-tab-container">
         <!-- Tab Toggle -->
         <div class="clay-tabs">
             <button type="button"
                 class="clay-tab"
                 :class="{ 'active': tab === 'login' }"
                 @click="tab = 'login'"
+                onclick="if(window.Alpine) { window.Alpine.$data(this.closest('#auth-tab-container')).tab = 'login'; }"
                 id="tab-login">
                 ✨ Masuk
             </button>
@@ -15,6 +16,7 @@
                 class="clay-tab"
                 :class="{ 'active': tab === 'register' }"
                 @click="tab = 'register'"
+                onclick="if(window.Alpine) { window.Alpine.$data(this.closest('#auth-tab-container')).tab = 'register'; }"
                 id="tab-register">
                 🚀 Daftar
             </button>

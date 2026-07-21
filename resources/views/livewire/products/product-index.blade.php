@@ -154,7 +154,7 @@
                         <label class="mb-2 block text-sm font-semibold text-slate-700">Nama Produk</label>
                         <input
                             type="text"
-                            wire:model.blur="name"
+                            wire:model.live="name"
                             class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         >
                         @error('name')
