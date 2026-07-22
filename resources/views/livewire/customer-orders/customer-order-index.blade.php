@@ -221,7 +221,7 @@
         </div>
 
         <div class="mt-6">
-            {{ $orders->links() }}
+            {{ $orders->links('vendor.pagination.tailwind') }}
         </div>
     </div>
 

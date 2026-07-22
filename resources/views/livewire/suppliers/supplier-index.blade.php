@@ -119,7 +119,7 @@
         </div>
 
         <div class="mt-6">
-            {{ $suppliers->links() }}
+            {{ $suppliers->links('vendor.pagination.tailwind') }}
         </div>
     </div>
 

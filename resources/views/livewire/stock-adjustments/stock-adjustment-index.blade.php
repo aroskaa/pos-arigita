@@ -136,7 +136,7 @@
         </div>
 
         <div class="mt-6">
-            {{ $adjustments->links() }}
+            {{ $adjustments->links('vendor.pagination.tailwind') }}
         </div>
     </div>
 

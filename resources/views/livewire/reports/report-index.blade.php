@@ -496,7 +496,7 @@
                 </table>
             </div>
             <div class="mt-4">
-                {{ $activityLogs->links() }}
+                {{ $activityLogs->links('vendor.pagination.tailwind') }}
             </div>
         </div>
     @endif

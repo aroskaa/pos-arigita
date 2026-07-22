@@ -1,25 +1,45 @@
 @if ($paginator->hasPages())
-    <nav role="navigation" aria-label="{{ __('Pagination Navigation') }}" class="flex gap-2 items-center justify-between">
-
+    <div class="flex items-center justify-between border-t border-slate-100 pt-4">
         @if ($paginator->onFirstPage())
-            <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 cursor-not-allowed leading-5 rounded-md dark:text-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                {!! __('pagination.previous') !!}
-            </span>
+            <button
+                type="button"
+                disabled
+                class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+            >
+                Sebelumnya
+            </button>
         @else
-            <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-300 leading-5 rounded-md hover:text-gray-700 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-800 transition ease-in-out duration-150 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:focus:border-blue-700 dark:active:bg-gray-700 dark:active:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 dark:hover:text-gray-200">
-                {!! __('pagination.previous') !!}
-            </a>
+            <button
+                type="button"
+                wire:click="previousPage('{{ $paginator->getPageName() }}')"
+                wire:loading.attr="disabled"
+                class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+            >
+                Sebelumnya
+            </button>
         @endif
+
+        <span class="text-xs font-bold text-slate-500">
+            Halaman {{ $paginator->currentPage() }}
+        </span>
 
         @if ($paginator->hasMorePages())
-            <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-300 leading-5 rounded-md hover:text-gray-700 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-800 transition ease-in-out duration-150 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200 dark:focus:border-blue-700 dark:active:bg-gray-700 dark:active:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 dark:hover:text-gray-200">
-                {!! __('pagination.next') !!}
-            </a>
+            <button
+                type="button"
+                wire:click="nextPage('{{ $paginator->getPageName() }}')"
+                wire:loading.attr="disabled"
+                class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+            >
+                Selanjutnya
+            </button>
         @else
-            <span class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 cursor-not-allowed leading-5 rounded-md dark:text-gray-300 dark:bg-gray-700 dark:border-gray-600">
-                {!! __('pagination.next') !!}
-            </span>
+            <button
+                type="button"
+                disabled
+                class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+            >
+                Selanjutnya
+            </button>
         @endif
-
-    </nav>
+    </div>
 @endif
