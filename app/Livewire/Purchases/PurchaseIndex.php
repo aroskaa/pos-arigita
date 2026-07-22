@@ -321,6 +321,8 @@ class PurchaseIndex extends Component
                 'created_by' => Auth::id(),
             ]);
 
+            $priceChanges = [];
+
             foreach ($this->items as $item) {
                 $product = Product::query()
                     ->lockForUpdate()
@@ -331,16 +333,26 @@ class PurchaseIndex extends Component
                 $subtotal = $quantity * $unitCost;
 
                 $stockBefore = (int) $product->stock;
+                $purchasePriceBefore = (float) $product->purchase_price;
                 $averageCostBefore = (float) $product->average_cost;
+                $sellingPriceBefore = (float) $product->selling_price;
 
-                $oldStockValue = $stockBefore * $averageCostBefore;
+                $oldStockValue = max(0, $stockBefore) * $averageCostBefore;
                 $incomingStockValue = $quantity * $unitCost;
 
                 $stockAfter = $stockBefore + $quantity;
 
-                $averageCostAfter = $stockAfter > 0
+                // Handle HPP (Moving Average): if stock before was <= 0, new HPP is the new unit purchase cost
+                $averageCostAfter = $stockBefore > 0
                     ? ($oldStockValue + $incomingStockValue) / $stockAfter
                     : $unitCost;
+
+                // Target selling price: HPP + 5% margin, rounded UP to nearest 100
+                $targetSellingPrice = (int) ceil(($averageCostAfter * 1.05) / 100) * 100;
+
+                // Rule: Selling price NEVER decreases automatically.
+                // It stays at sellingPriceBefore if target is lower/equal, or increases to target.
+                $sellingPriceAfter = max($sellingPriceBefore, $targetSellingPrice);
 
                 PurchaseItem::query()->create([
                     'purchase_id' => $purchase->id,
@@ -354,6 +366,7 @@ class PurchaseIndex extends Component
                     'stock' => $stockAfter,
                     'purchase_price' => $unitCost,
                     'average_cost' => $averageCostAfter,
+                    'selling_price' => $sellingPriceAfter,
                 ]);
 
                 StockMovement::query()->create([
@@ -370,6 +383,19 @@ class PurchaseIndex extends Component
                     'note' => 'Pembelian barang dari supplier.',
                     'created_by' => Auth::id(),
                 ]);
+
+                $priceChanges[] = [
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'sku' => $product->sku,
+                    'purchase_price_before' => $purchasePriceBefore,
+                    'purchase_price_after' => $unitCost,
+                    'hpp_before' => $averageCostBefore,
+                    'hpp_after' => $averageCostAfter,
+                    'selling_price_before' => $sellingPriceBefore,
+                    'selling_price_after' => $sellingPriceAfter,
+                    'price_updated' => $sellingPriceAfter > $sellingPriceBefore,
+                ];
             }
 
             ActivityLogger::log(
@@ -380,6 +406,7 @@ class PurchaseIndex extends Component
                     'total_amount' => (float) $purchase->total_amount,
                     'item_count' => count($this->items),
                     'supplier_id' => $purchase->supplier_id,
+                    'price_changes' => $priceChanges,
                 ],
             );
 

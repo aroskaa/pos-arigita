@@ -445,11 +445,43 @@
                                 <td class="py-3 text-slate-600 whitespace-nowrap">{{ $log->user?->name ?? 'Public' }}</td>
                                 <td class="py-3 text-xs text-slate-500">
                                     @if ($log->metadata)
-                                        <div class="max-w-[400px]">
-                                            <code class="break-all line-clamp-2 text-xs text-slate-500" title="{{ json_encode($log->metadata, JSON_UNESCAPED_SLASHES) }}">
-                                                {{ json_encode($log->metadata, JSON_UNESCAPED_SLASHES) }}
-                                            </code>
-                                        </div>
+                                        @if (isset($log->metadata['price_changes']) && is_array($log->metadata['price_changes']))
+                                            <div class="space-y-2 max-w-[480px]">
+                                                @foreach ($log->metadata['price_changes'] as $change)
+                                                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                                                        <div class="flex items-center justify-between gap-2">
+                                                            <p class="font-bold text-slate-800 text-xs">{{ $change['product_name'] ?? 'Produk' }}</p>
+                                                            <span class="text-[10px] text-slate-400">{{ $change['sku'] ?? '' }}</span>
+                                                        </div>
+                                                        <div class="mt-1.5 grid grid-cols-3 gap-2 text-[11px]">
+                                                            <div class="rounded-lg bg-white p-1.5 border border-slate-100">
+                                                                <span class="text-slate-400 block text-[10px]">Harga Beli</span>
+                                                                <span class="font-medium text-slate-700">Rp {{ number_format($change['purchase_price_before'] ?? 0, 0, ',', '.') }} &rarr; <strong class="text-slate-900">Rp {{ number_format($change['purchase_price_after'] ?? 0, 0, ',', '.') }}</strong></span>
+                                                            </div>
+                                                            <div class="rounded-lg bg-white p-1.5 border border-slate-100">
+                                                                <span class="text-slate-400 block text-[10px]">HPP (Avg)</span>
+                                                                <span class="font-medium text-slate-700">Rp {{ number_format($change['hpp_before'] ?? 0, 0, ',', '.') }} &rarr; <strong class="text-slate-900">Rp {{ number_format($change['hpp_after'] ?? 0, 0, ',', '.') }}</strong></span>
+                                                            </div>
+                                                            <div class="rounded-lg bg-white p-1.5 border border-slate-100">
+                                                                <span class="text-slate-400 block text-[10px]">Harga Jual</span>
+                                                                <span class="font-medium text-slate-700">
+                                                                    Rp {{ number_format($change['selling_price_before'] ?? 0, 0, ',', '.') }} &rarr; 
+                                                                    <strong class="{{ ($change['price_updated'] ?? false) ? 'text-emerald-600' : 'text-slate-900' }}">
+                                                                        Rp {{ number_format($change['selling_price_after'] ?? 0, 0, ',', '.') }}
+                                                                    </strong>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="max-w-[400px]">
+                                                <code class="break-all line-clamp-2 text-xs text-slate-500" title="{{ json_encode($log->metadata, JSON_UNESCAPED_SLASHES) }}">
+                                                    {{ json_encode($log->metadata, JSON_UNESCAPED_SLASHES) }}
+                                                </code>
+                                            </div>
+                                        @endif
                                     @else
                                         -
                                     @endif
