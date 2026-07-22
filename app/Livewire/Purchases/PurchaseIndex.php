@@ -3,6 +3,7 @@
 namespace App\Livewire\Purchases;
 
 use App\Models\Product;
+use App\Models\ProductPrice;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\StockMovement;
@@ -366,8 +367,23 @@ class PurchaseIndex extends Component
                     'stock' => $stockAfter,
                     'purchase_price' => $unitCost,
                     'average_cost' => $averageCostAfter,
-                    'selling_price' => $sellingPriceAfter,
                 ]);
+
+                $tierOne = ProductPrice::query()
+                    ->where('product_id', '=', $product->id)
+                    ->where('min_qty', '=', 1)
+                    ->first();
+
+                if ($tierOne) {
+                    $tierOne->update(['price' => $sellingPriceAfter]);
+                } else {
+                    ProductPrice::query()->create([
+                        'product_id' => $product->id,
+                        'min_qty' => 1,
+                        'max_qty' => null,
+                        'price' => $sellingPriceAfter,
+                    ]);
+                }
 
                 StockMovement::query()->create([
                     'product_id' => $product->id,

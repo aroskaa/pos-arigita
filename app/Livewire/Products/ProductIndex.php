@@ -90,7 +90,7 @@ class ProductIndex extends Component
     {
         return view('livewire.products.product-index', [
             'products' => Product::query()
-                ->with(['category', 'unit'])
+                ->with(['category', 'unit', 'prices'])
                 ->where(function ($query): void {
                     $query->where('name', 'like', '%' . $this->search . '%')
                         ->orWhere('sku', 'like', '%' . $this->search . '%')
@@ -121,7 +121,7 @@ class ProductIndex extends Component
     public function edit(int $id): void
     {
         /** @var Product $product */
-        $product = Product::query()->with(['category', 'unit'])->findOrFail($id);
+        $product = Product::query()->with(['category', 'unit', 'prices'])->findOrFail($id);
 
         $this->resetValidation();
 
@@ -184,7 +184,6 @@ class ProductIndex extends Component
                 'barcode' => $validated['barcode'] ?? null,
                 'description' => $this->description,
                 'purchase_price' => (int) $validated['purchase_price'],
-                'selling_price' => (int) $validated['selling_price'],
 
                 // average_cost tidak ikut diubah saat edit produk,
                 // karena nilai ini sudah dipengaruhi pembelian dan moving average.
@@ -192,6 +191,8 @@ class ProductIndex extends Component
                 'minimum_stock' => (int) $validated['minimum_stock'],
                 'is_active' => $this->is_active,
             ]);
+
+            $this->updateTierOnePrice($product->id, (int) $validated['selling_price']);
 
             ActivityLogger::log(
                 'product.updated',
@@ -214,12 +215,13 @@ class ProductIndex extends Component
                 'barcode' => $validated['barcode'] ?? null,
                 'description' => $this->description,
                 'purchase_price' => (int) $validated['purchase_price'],
-                'selling_price' => (int) $validated['selling_price'],
                 'average_cost' => (int) $validated['purchase_price'],
                 'stock' => (int) $validated['stock'],
                 'minimum_stock' => (int) $validated['minimum_stock'],
                 'is_active' => $this->is_active,
             ]);
+
+            $this->updateTierOnePrice($product->id, (int) $validated['selling_price']);
 
             ActivityLogger::log(
                 'product.created',
@@ -531,5 +533,32 @@ class ProductIndex extends Component
     public function updatedBarcode(): void
     {
         $this->barcode = preg_replace('/[^A-Za-z0-9]/', '', (string) $this->barcode);
+    }
+
+    private function updateTierOnePrice(int $productId, int $price): void
+    {
+        $tierOne = ProductPrice::query()
+            ->where('product_id', '=', $productId)
+            ->where('min_qty', '=', 1)
+            ->first();
+
+        if ($tierOne) {
+            $tierOne->update(['price' => $price]);
+        } else {
+            $nextTier = ProductPrice::query()
+                ->where('product_id', '=', $productId)
+                ->where('min_qty', '>', 1)
+                ->orderBy('min_qty', 'asc')
+                ->first();
+
+            $maxQty = $nextTier ? ($nextTier->min_qty - 1) : null;
+
+            ProductPrice::query()->create([
+                'product_id' => $productId,
+                'min_qty' => 1,
+                'max_qty' => $maxQty,
+                'price' => $price,
+            ]);
+        }
     }
 }

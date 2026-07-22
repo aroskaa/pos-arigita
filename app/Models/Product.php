@@ -21,7 +21,6 @@ class Product extends Model
         'description',
         'image',
         'purchase_price',
-        'selling_price',
         'average_cost',
         'stock',
         'minimum_stock',
@@ -32,7 +31,6 @@ class Product extends Model
     {
         return [
             'purchase_price' => 'decimal:2',
-            'selling_price' => 'decimal:2',
             'average_cost' => 'decimal:2',
             'stock' => 'integer',
             'minimum_stock' => 'integer',
@@ -55,8 +53,29 @@ class Product extends Model
         return $this->hasMany(ProductPrice::class);
     }
 
+    public function getSellingPriceAttribute(): float
+    {
+        return $this->getPriceForQuantity(1);
+    }
+
     public function getPriceForQuantity(int $quantity): float
     {
+        if ($this->relationLoaded('prices')) {
+            $bulkPrice = $this->prices
+                ->filter(function ($p) use ($quantity) {
+                    return $p->min_qty <= $quantity && (is_null($p->max_qty) || $p->max_qty >= $quantity);
+                })
+                ->sortByDesc('min_qty')
+                ->first();
+
+            if ($bulkPrice) {
+                return (float) $bulkPrice->price;
+            }
+
+            $basePrice = $this->prices->sortBy('min_qty')->first();
+            return (float) ($basePrice?->price ?? 0);
+        }
+
         $bulkPrice = $this->prices()
             ->where('min_qty', '<=', $quantity)
             ->where(function ($query) use ($quantity) {
@@ -66,7 +85,13 @@ class Product extends Model
             ->orderByDesc('min_qty')
             ->first();
 
-        return (float) ($bulkPrice?->price ?? $this->selling_price);
+        if ($bulkPrice) {
+            return (float) $bulkPrice->price;
+        }
+
+        $basePrice = $this->prices()->orderBy('min_qty', 'asc')->first();
+
+        return (float) ($basePrice?->price ?? 0);
     }
 
     public function saleItems(): HasMany
