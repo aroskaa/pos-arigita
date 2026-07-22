@@ -606,15 +606,36 @@
                                         Harga
                                     </label>
 
-                                    <div class="relative">
+                                    <div
+                                        x-data="{
+                                            raw: @entangle('bulkPrices.' . $index . '.price').live,
+                                            display: '',
+                                            format(value) {
+                                                const number = String(value ?? '').replace(/\D/g, '');
+
+                                                if (number === '') {
+                                                    this.display = '';
+                                                    this.raw = null;
+                                                    return;
+                                                }
+
+                                                this.raw = parseInt(number, 10);
+                                                this.display = new Intl.NumberFormat('id-ID').format(parseInt(number, 10));
+                                            }
+                                        }"
+                                        x-init="format(raw); $watch('raw', value => format(value))"
+                                        class="relative"
+                                    >
                                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500">
                                             Rp
                                         </span>
 
                                         <input
-                                            type="number"
-                                            min="0"
-                                            wire:model="bulkPrices.{{ $index }}.price"
+                                            type="text"
+                                            inputmode="numeric"
+                                            x-model="display"
+                                            x-on:input="format($event.target.value)"
+                                            placeholder="0"
                                             class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                         >
                                     </div>
