@@ -871,13 +871,13 @@
                         Detail Invoice
                     </a>
 
-                    <a
-                        href="{{ route('sales.receipt', ['sale' => $completedSaleId, 'print' => 1, 'redirect' => 'detail']) }}"
-                        target="_blank"
+                    <button
+                        type="button"
+                        onclick="printReceipt('{{ route('sales.receipt', ['sale' => $completedSaleId]) }}')"
                         class="rounded-2xl bg-blue-600 px-5 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700"
                     >
                         Print Struk
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>

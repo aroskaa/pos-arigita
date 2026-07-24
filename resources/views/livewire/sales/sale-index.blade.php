@@ -142,13 +142,13 @@
                                     Detail
                                 </a>
                                 
-                                <a
-                                    href="{{ route('sales.receipt', $sale) }}"
-                                    target="_blank"
+                                <button
+                                    type="button"
+                                    onclick="printReceipt('{{ route('sales.receipt', ['sale' => $sale, 'is_copy' => 1]) }}')"
                                     class="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800"
                                 >
                                     Struk
-                                </a>
+                                </button>
                             </td>
                         </tr>
                     @empty

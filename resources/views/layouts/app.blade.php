@@ -34,6 +34,39 @@
             </main>
         </div>
 
+        <script>
+            window.printReceipt = function(url) {
+                let iframe = document.getElementById('receipt-print-iframe');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    iframe.id = 'receipt-print-iframe';
+                    iframe.style.position = 'fixed';
+                    iframe.style.right = '0';
+                    iframe.style.bottom = '0';
+                    iframe.style.width = '0';
+                    iframe.style.height = '0';
+                    iframe.style.border = '0';
+                    iframe.style.opacity = '0';
+                    document.body.appendChild(iframe);
+                }
+
+                const printFrame = () => {
+                    try {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                    } catch (e) {
+                        console.error('Receipt print error:', e);
+                    }
+                };
+
+                iframe.onload = function() {
+                    setTimeout(printFrame, 250);
+                };
+
+                iframe.src = url;
+            };
+        </script>
+
         @livewireScripts
     </body>
 </html>

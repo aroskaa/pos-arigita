@@ -21,6 +21,23 @@
             color: #111827;
         }
 
+        @if (request()->boolean('embed'))
+            body {
+                background: transparent !important;
+            }
+
+            .page-wrapper {
+                min-height: auto !important;
+                padding: 8px 0 !important;
+                background: transparent !important;
+            }
+
+            .receipt {
+                border-radius: 12px;
+                box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12) !important;
+            }
+        @endif
+
         .page-wrapper {
             min-height: 100vh;
             padding: 24px;
@@ -201,6 +218,9 @@
             <div class="receipt">
                 <div class="center">
                     <div class="store-name">CV Ari Gita Grosir</div>
+                    @if (request()->boolean('is_copy'))
+                        <div class="store-subtitle bold" style="font-weight: 700; font-size: 11px; margin-top: 2px;">[ STRUK COPY ]</div>
+                    @endif
                     <div class="store-subtitle">Grosir Minuman</div>
                     <div class="store-subtitle">Struk Transaksi Penjualan</div>
                 </div>
@@ -320,22 +340,24 @@
                 </div>
             </div>
 
-            <div class="dev-actions">
-                <a
-                    href="{{ route('sales.show', $sale) }}"
-                    class="btn-secondary"
-                >
-                    Kembali
-                </a>
+            @if (!request()->boolean('embed'))
+                <div class="dev-actions">
+                    <a
+                        href="{{ route('sales.show', $sale) }}"
+                        class="btn-secondary"
+                    >
+                        Kembali
+                    </a>
 
-                <button
-                    type="button"
-                    class="btn-primary"
-                    onclick="window.print()"
-                >
-                    Preview Print
-                </button>
-            </div>
+                    <button
+                        type="button"
+                        class="btn-primary"
+                        onclick="window.print()"
+                    >
+                        Preview Print
+                    </button>
+                </div>
+            @endif
         </div>
     </div>
 

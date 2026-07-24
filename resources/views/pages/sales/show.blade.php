@@ -7,7 +7,7 @@
         Detail Invoice
     </x-slot>
 
-    <div class="mx-auto max-w-5xl">
+    <div class="mx-auto max-w-5xl" x-data="{ showPreviewModal: false }">
         <div class="print-invoice rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
             <div>
                 <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -234,13 +234,77 @@
                     Kembali
                 </a>
 
-                <a
-                    href="{{ route('sales.receipt', $sale) }}"
-                    target="_blank"
-                    class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                <button
+                    type="button"
+                    @click="showPreviewModal = true"
+                    class="rounded-2xl bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-100 transition"
+                >
+                    Preview Struk
+                </button>
+
+                <button
+                    type="button"
+                    onclick="printReceipt('{{ route('sales.receipt', ['sale' => $sale, 'is_copy' => 1]) }}')"
+                    class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition"
                 >
                     Print Struk
-                </a>
+                </button>
+            </div>
+        </div>
+
+        {{-- RECEIPT PREVIEW MODAL --}}
+        <div
+            x-show="showPreviewModal"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs no-print"
+        >
+            <div
+                @click.away="showPreviewModal = false"
+                class="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl transition-all"
+            >
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">
+                            Preview Struk Penjualan
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Tampilan fisik thermal receipt (80mm)
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        @click="showPreviewModal = false"
+                        class="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-200"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <div class="flex justify-center bg-slate-50/80 p-5 max-h-[70vh] overflow-y-auto">
+                    <iframe
+                        src="{{ route('sales.receipt', ['sale' => $sale, 'is_copy' => 1, 'embed' => 1]) }}"
+                        class="h-[460px] w-[86mm] border-0 bg-transparent"
+                    ></iframe>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                    <button
+                        type="button"
+                        @click="showPreviewModal = false"
+                        class="rounded-2xl bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                    >
+                        Tutup
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="printReceipt('{{ route('sales.receipt', ['sale' => $sale, 'is_copy' => 1]) }}')"
+                        class="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                    >
+                        Cetak Struk
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -277,4 +341,3 @@
     </style>
 
 </x-pos-layout>
-
