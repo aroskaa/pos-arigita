@@ -6,6 +6,7 @@ use App\Models\CustomerOrder;
 use App\Models\Product;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceScheme('https');
         View::composer('layouts.pos', function ($view): void {
             $pendingOrdersCount = CustomerOrder::query()
                 ->whereIn('status', ['pending', 'preorder'])

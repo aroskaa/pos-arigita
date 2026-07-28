@@ -14,20 +14,45 @@
     @livewireStyles
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-slate-50/70 text-slate-900 antialiased">
-    <div class="min-h-screen flex">
+<body class="bg-slate-50/70 text-slate-900 antialiased" x-data="{ sidebarOpen: false }">
+    <div class="min-h-screen flex relative">
+        <!-- MOBILE BACKDROP OVERLAY -->
+        <div 
+            x-show="sidebarOpen" 
+            x-cloak
+            @click="sidebarOpen = false"
+            x-transition:enter="transition-opacity ease-linear duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-300"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+        ></div>
+
         <!-- SIDEBAR -->
-        <aside class="hidden lg:flex lg:w-72 lg:flex-col bg-white border-r border-slate-200/80 h-screen sticky top-0 overflow-hidden shadow-sm">
-            <div class="h-20 shrink-0 flex items-center gap-3 px-6 border-b border-slate-100">
-                <div class="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
-                    AG
+        <aside 
+            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+            class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200/80 h-screen flex flex-col transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:z-auto shrink-0 shadow-xl lg:shadow-sm overflow-hidden"
+        >
+            <div class="h-20 shrink-0 flex items-center justify-between px-6 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
+                        AG
+                    </div>
+                    <div>
+                        <h1 class="text-base font-bold text-slate-900 tracking-tight">Ari Gita POS</h1>
+                        <p class="text-xs font-semibold text-blue-600">Grosir Minuman</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-base font-bold text-slate-900 tracking-tight">Ari Gita POS</h1>
-                    <p class="text-xs font-semibold text-blue-600">Grosir Minuman</p>
-                </div>
+                <button @click="sidebarOpen = false" class="lg:hidden rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus:outline-none" aria-label="Tutup menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
 
             <nav class="mt-4 flex-1 space-y-4 px-4 overflow-y-auto">
@@ -197,11 +222,19 @@
         </aside>
 
         <!-- MAIN CONTENT AREA -->
-        <main class="flex-1">
-            <header class="h-20 bg-white border-b border-slate-200/80 flex items-center justify-between px-6 lg:px-8 shadow-sm">
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900 tracking-tight">{{ $header ?? 'Dashboard' }}</h2>
-                    <p class="text-xs text-slate-500 mt-0.5 font-medium">Sistem POS berbasis web untuk integrasi transaksi dan stok.</p>
+        <main class="flex-1 min-w-0">
+            <header class="sticky top-0 z-30 h-20 bg-white/95 backdrop-blur border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm gap-3">
+                <div class="flex items-center gap-3">
+                    <!-- BURGER BUTTON FOR MOBILE -->
+                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition" aria-label="Buka menu">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate">{{ $header ?? 'Dashboard' }}</h2>
+                        <p class="text-xs text-slate-500 mt-0.5 font-medium hidden sm:block">Sistem POS berbasis web untuk integrasi transaksi dan stok.</p>
+                    </div>
                 </div>
 
                 <div class="hidden md:flex items-center gap-3">
