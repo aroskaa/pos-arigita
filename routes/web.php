@@ -1,8 +1,9 @@
-    <?php
+<?php
 
     use App\Http\Controllers\DashboardController;
     use App\Http\Controllers\ReportDownloadController;
     use App\Http\Controllers\SaleController;
+    use App\Http\Controllers\StockDailyRecapExcelController;
     use App\Http\Controllers\StockDailyRecapPdfController;
     use Illuminate\Support\Facades\Route;
 
@@ -61,6 +62,9 @@
 
             Route::get('/stock-daily-recaps/download', StockDailyRecapPdfController::class)
                 ->name('stock-daily-recaps.download');
+
+            Route::get('/stock-daily-recaps/download-excel', StockDailyRecapExcelController::class)
+                ->name('stock-daily-recaps.excel');
 
             Route::get('/stock-adjustments', function () {
                 return view('pages.stock-adjustments.index');
