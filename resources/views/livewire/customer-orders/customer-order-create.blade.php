@@ -16,7 +16,21 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
+                <div class="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm">
+                    Buat Order Baru
+                </div>
+
                 @auth
+                    <a
+                        href="{{ route('customer-orders.history') }}"
+                        class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 hover:text-slate-900"
+                    >
+                        <svg class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Riwayat Order Saya
+                    </a>
+
                     <div class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
                         {{ auth()->user()->name }}
                     </div>
@@ -36,10 +50,6 @@
                         Register
                     </a>
                 @endauth
-
-                <div class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
-                    Order Grosir Minuman
-                </div>
             </div>
         </div>
     </header>

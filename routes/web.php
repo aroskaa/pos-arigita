@@ -21,6 +21,10 @@
         Route::get('/dashboard', DashboardController::class)
             ->name('dashboard');
 
+        Route::get('/order/history', function () {
+            return view('pages.customer-orders.history');
+        })->name('customer-orders.history');
+
         Route::middleware('role:owner')->group(function () {
             Route::get('/users', function () {
                 return view('pages.users.index');
