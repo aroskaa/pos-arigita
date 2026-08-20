@@ -15,6 +15,8 @@ class UserIndex extends Component
 
     public string $search = '';
 
+    public string $roleFilter = 'all';
+
     public bool $showModal = false;
 
     public ?int $userId = null;
@@ -65,22 +67,48 @@ class UserIndex extends Component
         ];
     }
 
+    public function setRoleFilter(string $role): void
+    {
+        if (in_array($role, ['all', 'owner', 'admin', 'cashier', 'customer'], true)) {
+            $this->roleFilter = $role;
+            $this->resetPage();
+        }
+    }
+
     public function render()
     {
+        $counts = [
+            'all' => User::query()->count(),
+            'owner' => User::query()->where('role', 'owner')->count(),
+            'admin' => User::query()->where('role', 'admin')->count(),
+            'cashier' => User::query()->where('role', 'cashier')->count(),
+            'customer' => User::query()->where('role', 'customer')->count(),
+        ];
+
         return view('livewire.users.user-index', [
             'users' => User::query()
-                ->where(function ($query) {
-                    $query->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('email', 'like', '%' . $this->search . '%')
-                        ->orWhere('phone', 'like', '%' . $this->search . '%')
-                        ->orWhere('role', 'like', '%' . $this->search . '%');
+                ->when($this->roleFilter !== 'all', function ($query) {
+                    $query->where('role', $this->roleFilter);
+                })
+                ->when($this->search !== '', function ($query) {
+                    $query->where(function ($sub) {
+                        $sub->where('name', 'like', '%' . $this->search . '%')
+                            ->orWhere('email', 'like', '%' . $this->search . '%')
+                            ->orWhere('phone', 'like', '%' . $this->search . '%');
+                    });
                 })
                 ->latest()
                 ->paginate(10),
+            'counts' => $counts,
         ]);
     }
 
     public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedRoleFilter(): void
     {
         $this->resetPage();
     }
