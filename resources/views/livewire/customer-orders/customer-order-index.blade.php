@@ -12,34 +12,90 @@
     </div>
 
     <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <input
-                type="text"
-                wire:model.live.debounce.300ms="search"
-                placeholder="Cari nomor order, nama, atau nomor HP..."
-                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            >
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            {{-- Status Filter Pills --}}
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    wire:click="setStatusFilter('')"
+                    class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $status === '' ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}"
+                >
+                    <span>Semua Status</span>
+                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $status === '' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700' }}">
+                        {{ $counts['all'] }}
+                    </span>
+                </button>
 
-            <select
-                wire:model.live="status"
-                class="rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            >
-                <option value="">Semua Status</option>
+                <button
+                    type="button"
+                    wire:click="setStatusFilter('pending')"
+                    class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $status === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 text-amber-700 hover:bg-amber-100' }}"
+                >
+                    <span>Pending</span>
+                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $status === 'pending' ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-800' }}">
+                        {{ $counts['pending'] }}
+                    </span>
+                </button>
 
-                @foreach ($statuses as $key => $label)
-                    <option value="{{ $key }}">
-                        {{ $label }}
-                    </option>
-                @endforeach
-            </select>
+                <button
+                    type="button"
+                    wire:click="setStatusFilter('preorder')"
+                    class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $status === 'preorder' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' }}"
+                >
+                    <span>Preorder</span>
+                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $status === 'preorder' ? 'bg-indigo-700 text-white' : 'bg-indigo-100 text-indigo-800' }}">
+                        {{ $counts['preorder'] }}
+                    </span>
+                </button>
 
-            <button
-                type="button"
-                wire:click="resetFilters"
-                class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200"
-            >
-                Reset Filter
-            </button>
+                <button
+                    type="button"
+                    wire:click="setStatusFilter('converted')"
+                    class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $status === 'converted' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }}"
+                >
+                    <span>Converted</span>
+                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $status === 'converted' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800' }}">
+                        {{ $counts['converted'] }}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="setStatusFilter('rejected')"
+                    class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $status === 'rejected' ? 'bg-rose-600 text-white shadow-sm' : 'bg-rose-50 text-rose-700 hover:bg-rose-100' }}"
+                >
+                    <span>Rejected</span>
+                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $status === 'rejected' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800' }}">
+                        {{ $counts['rejected'] }}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="setStatusFilter('cancelled')"
+                    class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $status === 'cancelled' ? 'bg-slate-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}"
+                >
+                    <span>Cancelled</span>
+                    <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $status === 'cancelled' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700' }}">
+                        {{ $counts['cancelled'] }}
+                    </span>
+                </button>
+            </div>
+
+            {{-- Search Box --}}
+            <div class="relative w-full lg:w-80">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Cari nomor order, nama, HP..."
+                    class="w-full rounded-2xl border border-slate-200 bg-slate-50/50 pl-11 pr-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition"
+                >
+            </div>
         </div>
 
         @if (session()->has('success'))

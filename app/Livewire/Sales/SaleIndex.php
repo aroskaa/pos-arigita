@@ -13,10 +13,39 @@ class SaleIndex extends Component
     public string $search = '';
 
     public ?string $startDate = null;
+
     public ?string $endDate = null;
+
+    public string $datePreset = 'all';
+
     public int $filterKey = 0;
 
     protected string $paginationTheme = 'tailwind';
+
+    public function setDatePreset(string $preset): void
+    {
+        $this->datePreset = $preset;
+
+        if ($preset === 'today') {
+            $this->startDate = now()->format('Y-m-d');
+            $this->endDate = now()->format('Y-m-d');
+        } elseif ($preset === '7days') {
+            $this->startDate = now()->subDays(6)->format('Y-m-d');
+            $this->endDate = now()->format('Y-m-d');
+        } elseif ($preset === 'this_month') {
+            $this->startDate = now()->startOfMonth()->format('Y-m-d');
+            $this->endDate = now()->format('Y-m-d');
+        } elseif ($preset === 'last_month') {
+            $this->startDate = now()->subMonth()->startOfMonth()->format('Y-m-d');
+            $this->endDate = now()->subMonth()->endOfMonth()->format('Y-m-d');
+        } else {
+            $this->startDate = null;
+            $this->endDate = null;
+        }
+
+        $this->filterKey++;
+        $this->resetPage();
+    }
 
     public function render()
     {
@@ -58,6 +87,7 @@ class SaleIndex extends Component
         $this->search = '';
         $this->startDate = null;
         $this->endDate = null;
+        $this->datePreset = 'all';
 
         $this->filterKey++;
 
@@ -71,11 +101,13 @@ class SaleIndex extends Component
 
     public function updatedStartDate(): void
     {
+        $this->datePreset = 'custom';
         $this->resetPage();
     }
 
     public function updatedEndDate(): void
     {
+        $this->datePreset = 'custom';
         $this->resetPage();
     }
 }

@@ -41,8 +41,23 @@ class CustomerOrderIndex extends Component
 
     protected string $paginationTheme = 'tailwind';
 
+    public function setStatusFilter(string $status): void
+    {
+        $this->status = $status;
+        $this->resetPage();
+    }
+
     public function render()
     {
+        $counts = [
+            'all' => CustomerOrder::query()->count(),
+            'pending' => CustomerOrder::query()->where('status', 'pending')->count(),
+            'preorder' => CustomerOrder::query()->where('status', 'preorder')->count(),
+            'converted' => CustomerOrder::query()->where('status', 'converted')->count(),
+            'rejected' => CustomerOrder::query()->where('status', 'rejected')->count(),
+            'cancelled' => CustomerOrder::query()->where('status', 'cancelled')->count(),
+        ];
+
         return view('livewire.customer-orders.customer-order-index', [
             'orders' => CustomerOrder::query()
                 ->with(['items.product', 'customer', 'converter', 'rejecter', 'canceller', 'sale.items.product'])
@@ -66,6 +81,7 @@ class CustomerOrderIndex extends Component
                 'rejected' => 'Rejected',
                 'cancelled' => 'Cancelled',
             ],
+            'counts' => $counts,
         ]);
     }
 
