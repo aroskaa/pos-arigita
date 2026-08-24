@@ -50,16 +50,16 @@
     <main class="mx-auto max-w-7xl px-4 py-8">
         {{-- Search & Status Filter Section --}}
         <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 {{-- Status Filter Tabs --}}
-                <div class="flex flex-wrap items-center gap-2">
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <button
                         type="button"
                         wire:click="setStatusFilter('all')"
-                        class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $statusFilter === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}"
+                        class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition {{ $statusFilter === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}"
                     >
                         <span>Semua</span>
-                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $statusFilter === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700' }}">
+                        <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold {{ $statusFilter === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700' }}">
                             {{ $counts['all'] }}
                         </span>
                     </button>
@@ -67,10 +67,10 @@
                     <button
                         type="button"
                         wire:click="setStatusFilter('pending')"
-                        class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $statusFilter === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 text-amber-700 hover:bg-amber-100' }}"
+                        class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition {{ $statusFilter === 'pending' ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 text-amber-700 hover:bg-amber-100' }}"
                     >
                         <span>Menunggu Konfirmasi</span>
-                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $statusFilter === 'pending' ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-800' }}">
+                        <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold {{ $statusFilter === 'pending' ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-800' }}">
                             {{ $counts['pending'] }}
                         </span>
                     </button>
@@ -78,10 +78,10 @@
                     <button
                         type="button"
                         wire:click="setStatusFilter('converted')"
-                        class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $statusFilter === 'converted' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }}"
+                        class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition {{ $statusFilter === 'converted' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' }}"
                     >
                         <span>Diproses / Selesai</span>
-                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $statusFilter === 'converted' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800' }}">
+                        <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold {{ $statusFilter === 'converted' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800' }}">
                             {{ $counts['converted'] }}
                         </span>
                     </button>
@@ -89,10 +89,10 @@
                     <button
                         type="button"
                         wire:click="setStatusFilter('rejected')"
-                        class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $statusFilter === 'rejected' ? 'bg-rose-600 text-white shadow-sm' : 'bg-rose-50 text-rose-700 hover:bg-rose-100' }}"
+                        class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition {{ $statusFilter === 'rejected' ? 'bg-rose-600 text-white shadow-sm' : 'bg-rose-50 text-rose-700 hover:bg-rose-100' }}"
                     >
                         <span>Ditolak</span>
-                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $statusFilter === 'rejected' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800' }}">
+                        <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold {{ $statusFilter === 'rejected' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800' }}">
                             {{ $counts['rejected'] }}
                         </span>
                     </button>
@@ -100,23 +100,39 @@
                     <button
                         type="button"
                         wire:click="setStatusFilter('cancelled')"
-                        class="inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-semibold transition {{ $statusFilter === 'cancelled' ? 'bg-slate-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}"
+                        class="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition {{ $statusFilter === 'cancelled' ? 'bg-slate-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}"
                     >
                         <span>Dibatalkan</span>
-                        <span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $statusFilter === 'cancelled' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700' }}">
+                        <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold {{ $statusFilter === 'cancelled' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700' }}">
                             {{ $counts['cancelled'] }}
                         </span>
                     </button>
                 </div>
 
                 {{-- Search Box --}}
-                <div class="w-full lg:w-72">
+                <div class="relative w-full sm:w-64 lg:w-72 shrink-0">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
                     <input
                         type="text"
                         wire:model.live.debounce.300ms="search"
-                        placeholder="Cari nomor order / produk..."
-                        class="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        placeholder="Cari order / produk..."
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/50 pl-10 pr-9 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 transition"
                     >
+                    @if ($search)
+                        <button
+                            type="button"
+                            wire:click="$set('search', '')"
+                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                        >
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
