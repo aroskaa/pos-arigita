@@ -381,16 +381,59 @@
                                 Metode Pembayaran
                             </label>
 
-                            <select
-                                wire:model.live="paymentMethod"
-                                class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                            >
-                                <option value="cash">Tunai</option>
-                                <option value="qris">QRIS</option>
-                                <option value="debit">Debit</option>
-                                <option value="transfer">Transfer</option>
-                                <option value="other">Lainnya</option>
-                            </select>
+                            @php
+                                $paymentMethodsMap = [
+                                    'cash' => 'Tunai',
+                                    'qris' => 'QRIS',
+                                    'debit' => 'Debit',
+                                    'transfer' => 'Transfer',
+                                    'other' => 'Lainnya',
+                                ];
+                            @endphp
+
+                            <div x-data="{ open: false }" class="relative">
+                                <button
+                                    type="button"
+                                    @click="open = !open"
+                                    @click.outside="open = false"
+                                    class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                >
+                                    <span>
+                                        {{ $paymentMethodsMap[$paymentMethod] ?? 'Tunai' }}
+                                    </span>
+                                    <svg class="h-4 w-4 text-slate-400 transform transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <div
+                                    x-show="open"
+                                    x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                    x-transition:leave="transition ease-in duration-75"
+                                    x-transition:leave-start="transform opacity-100 scale-100"
+                                    x-transition:leave-end="transform opacity-0 scale-95"
+                                    class="absolute left-0 right-0 bottom-full mb-2 z-50 max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
+                                    style="display: none;"
+                                >
+                                    @foreach ($paymentMethodsMap as $key => $label)
+                                        <button
+                                            type="button"
+                                            wire:click="$set('paymentMethod', '{{ $key }}')"
+                                            @click="open = false"
+                                            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition {{ $paymentMethod === $key ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}"
+                                        >
+                                            <span>{{ $label }}</span>
+                                            @if ($paymentMethod === $key)
+                                                <svg class="h-4 w-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -727,13 +770,60 @@
                             Tipe Customer
                         </label>
 
-                        <select
-                            wire:model.live="customerType"
-                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm"
-                        >
-                            <option value="personal">Perorangan</option>
-                            <option value="store">Toko</option>
-                        </select>
+                        <div x-data="{ open: false }" class="relative">
+                            <button
+                                type="button"
+                                @click="open = !open"
+                                @click.outside="open = false"
+                                class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            >
+                                <span>
+                                    {{ $customerType === 'store' ? 'Toko' : 'Perorangan' }}
+                                </span>
+                                <svg class="h-4 w-4 text-slate-400 transform transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <div
+                                x-show="open"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute left-0 right-0 z-50 mt-2 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
+                                style="display: none;"
+                            >
+                                <button
+                                    type="button"
+                                    wire:click="$set('customerType', 'personal')"
+                                    @click="open = false"
+                                    class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition {{ $customerType === 'personal' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}"
+                                >
+                                    <span>Perorangan</span>
+                                    @if ($customerType === 'personal')
+                                        <svg class="h-4 w-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    @endif
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="$set('customerType', 'store')"
+                                    @click="open = false"
+                                    class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition {{ $customerType === 'store' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}"
+                                >
+                                    <span>Toko</span>
+                                    @if ($customerType === 'store')
+                                        <svg class="h-4 w-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    @endif
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div>

@@ -19,6 +19,7 @@ class ProductIndex extends Component
     protected string $paginationTheme = 'tailwind';
 
     public string $search = '';
+    public string $selectedCategory = '';
 
     public bool $showModal = false;
 
@@ -86,15 +87,25 @@ class ProductIndex extends Component
         $this->resetPage();
     }
 
+    public function updatedSelectedCategory(): void
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         return view('livewire.products.product-index', [
             'products' => Product::query()
                 ->with(['category', 'unit', 'prices'])
-                ->where(function ($query): void {
-                    $query->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('sku', 'like', '%' . $this->search . '%')
-                        ->orWhere('barcode', 'like', '%' . $this->search . '%');
+                ->when($this->search !== '', function ($query): void {
+                    $query->where(function ($q): void {
+                        $q->where('name', 'like', '%' . $this->search . '%')
+                            ->orWhere('sku', 'like', '%' . $this->search . '%')
+                            ->orWhere('barcode', 'like', '%' . $this->search . '%');
+                    });
+                })
+                ->when($this->selectedCategory !== '', function ($query): void {
+                    $query->where('category_id', '=', $this->selectedCategory);
                 })
                 ->latest()
                 ->paginate(10),

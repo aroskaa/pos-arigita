@@ -17,12 +17,85 @@
 
     <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <input
-                type="text"
-                wire:model.live="search"
-                placeholder="Cari produk..."
-                class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 md:max-w-sm"
-            >
+            <div class="flex w-full flex-col gap-3 md:flex-row md:items-center">
+                {{-- Search Box --}}
+                <div class="relative w-full md:max-w-xs">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        wire:model.live.debounce.300ms="search"
+                        placeholder="Cari produk..."
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
+
+                {{-- Custom Category Dropdown --}}
+                <div x-data="{ open: false }" class="relative w-full md:w-64">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        @click.outside="open = false"
+                        class="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    >
+                        <span class="truncate">
+                            @if ($selectedCategory && $cat = $categories->firstWhere('id', (int)$selectedCategory))
+                                {{ $cat->name }}
+                            @else
+                                Semua Kategori
+                            @endif
+                        </span>
+                        <svg class="h-4 w-4 shrink-0 text-slate-400 transform transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div
+                        x-show="open"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="transform opacity-0 scale-95"
+                        x-transition:enter-end="transform opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="transform opacity-100 scale-100"
+                        x-transition:leave-end="transform opacity-0 scale-95"
+                        class="absolute left-0 right-0 z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
+                        style="display: none;"
+                    >
+                        <button
+                            type="button"
+                            wire:click="$set('selectedCategory', '')"
+                            @click="open = false"
+                            class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition {{ empty($selectedCategory) ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}"
+                        >
+                            <span>Semua Kategori</span>
+                            @if (empty($selectedCategory))
+                                <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                            @endif
+                        </button>
+
+                        @foreach ($categories as $cat)
+                            <button
+                                type="button"
+                                wire:click="$set('selectedCategory', '{{ $cat->id }}')"
+                                @click="open = false"
+                                class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-medium transition {{ (string)$selectedCategory === (string)$cat->id ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' }}"
+                            >
+                                <span class="truncate">{{ $cat->name }}</span>
+                                @if ((string)$selectedCategory === (string)$cat->id)
+                                    <svg class="h-4 w-4 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
         </div>
 
         @if (session()->has('success'))
