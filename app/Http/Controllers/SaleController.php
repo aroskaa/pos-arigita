@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
-// use Illuminate\Http\Request;
+use Illuminate\Http\Request;
 
 class SaleController extends Controller
 {
@@ -25,7 +25,7 @@ class SaleController extends Controller
         return view('pages.sales.show', compact('sale'));
     }
 
-    public function receipt(Sale $sale)
+    public function receipt(Request $request, Sale $sale)
     {
         $sale->load([
             'cashier',
@@ -35,8 +35,12 @@ class SaleController extends Controller
             'canceller',
         ]);
 
+        $paper = $request->query('paper', $request->query('size', '58'));
+        $paperSize = in_array((string) $paper, ['58', '80'], true) ? (string) $paper : '58';
+
         return view('pages.sales.receipt', [
             'sale' => $sale,
+            'paperSize' => $paperSize,
         ]);
     }
 }

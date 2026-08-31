@@ -339,7 +339,18 @@
     </div>
 
     <script>
-        window.printReceipt = function(url) {
+        window.printReceipt = function(url, paperSize) {
+            let size = paperSize || localStorage.getItem('pos_receipt_paper_size') || '58';
+            let targetUrl;
+            try {
+                targetUrl = new URL(url, window.location.origin);
+                if (!targetUrl.searchParams.has('paper') && !targetUrl.searchParams.has('size')) {
+                    targetUrl.searchParams.set('paper', size);
+                }
+            } catch (e) {
+                targetUrl = url + (url.includes('?') ? '&' : '?') + 'paper=' + size;
+            }
+
             let iframe = document.getElementById('receipt-print-iframe');
             if (!iframe) {
                 iframe = document.createElement('iframe');
@@ -367,7 +378,7 @@
                 setTimeout(printFrame, 250);
             };
 
-            iframe.src = url;
+            iframe.src = targetUrl.toString();
         };
     </script>
 

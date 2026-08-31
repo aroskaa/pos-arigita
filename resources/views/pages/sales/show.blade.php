@@ -256,6 +256,18 @@
         <div
             x-show="showPreviewModal"
             x-cloak
+            x-data="{
+                paperSize: localStorage.getItem('pos_receipt_paper_size') || '58',
+                baseUrl: '{{ route('sales.receipt', ['sale' => $sale, 'is_copy' => 1, 'embed' => 1]) }}',
+                printUrl: '{{ route('sales.receipt', ['sale' => $sale, 'is_copy' => 1]) }}',
+                setPaper(size) {
+                    this.paperSize = size;
+                    localStorage.setItem('pos_receipt_paper_size', size);
+                },
+                get iframeSrc() {
+                    return this.baseUrl + '&paper=' + this.paperSize;
+                }
+            }"
             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs no-print"
         >
             <div
@@ -268,7 +280,7 @@
                             Preview Struk Penjualan
                         </h3>
                         <p class="text-xs text-slate-500">
-                            Tampilan fisik thermal receipt (80mm)
+                            Tampilan thermal receipt (<span x-text="paperSize + 'mm'"></span>)
                         </p>
                     </div>
 
@@ -281,10 +293,35 @@
                     </button>
                 </div>
 
-                <div class="flex justify-center bg-slate-50/80 p-5 max-h-[70vh] overflow-y-auto">
+                <div class="border-b border-slate-100 bg-slate-50 px-6 py-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600">Ukuran Kertas:</span>
+                        <div class="flex rounded-xl bg-slate-200/80 p-1">
+                            <button
+                                type="button"
+                                @click="setPaper('58')"
+                                :class="paperSize === '58' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 font-medium'"
+                                class="rounded-lg px-3 py-1 text-xs transition"
+                            >
+                                58mm (Kecil)
+                            </button>
+                            <button
+                                type="button"
+                                @click="setPaper('80')"
+                                :class="paperSize === '80' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 font-medium'"
+                                class="rounded-lg px-3 py-1 text-xs transition"
+                            >
+                                80mm (Standar)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center bg-slate-100/60 p-4 max-h-[65vh] overflow-y-auto">
                     <iframe
-                        src="{{ route('sales.receipt', ['sale' => $sale, 'is_copy' => 1, 'embed' => 1]) }}"
-                        class="h-[460px] w-[86mm] border-0 bg-transparent"
+                        :src="iframeSrc"
+                        :class="paperSize === '58' ? 'w-[64mm]' : 'w-[86mm]'"
+                        class="h-[460px] border-0 bg-transparent transition-all"
                     ></iframe>
                 </div>
 
@@ -299,7 +336,7 @@
 
                     <button
                         type="button"
-                        onclick="printReceipt('{{ route('sales.receipt', ['sale' => $sale, 'is_copy' => 1]) }}')"
+                        @click="printReceipt(printUrl, paperSize)"
                         class="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
                     >
                         Cetak Struk
