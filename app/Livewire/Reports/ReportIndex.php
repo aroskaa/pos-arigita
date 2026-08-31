@@ -48,6 +48,7 @@ class ReportIndex extends Component
         $this->resetPage('summaryPage');
         $this->resetPage('movementsPage');
         $this->resetPage('logsPage');
+        $this->resetPage('topProductsPage');
     }
 
     public function resetFilters(): void
@@ -61,6 +62,23 @@ class ReportIndex extends Component
         $this->resetPage('summaryPage');
         $this->resetPage('movementsPage');
         $this->resetPage('logsPage');
+        $this->resetPage('topProductsPage');
+    }
+
+    public function updatedStartDate(): void
+    {
+        $this->resetPage('summaryPage');
+        $this->resetPage('movementsPage');
+        $this->resetPage('logsPage');
+        $this->resetPage('topProductsPage');
+    }
+
+    public function updatedEndDate(): void
+    {
+        $this->resetPage('summaryPage');
+        $this->resetPage('movementsPage');
+        $this->resetPage('logsPage');
+        $this->resetPage('topProductsPage');
     }
 
     public function updatedProductSearch(): void
@@ -179,8 +197,7 @@ class ReportIndex extends Component
             ->selectRaw('products.name, products.sku, SUM(sale_items.quantity) as total_quantity, SUM(sale_items.subtotal) as total_sales')
             ->groupBy('products.id', 'products.name', 'products.sku')
             ->orderByDesc('total_quantity')
-            ->limit(8)
-            ->get();
+            ->paginate(3, ['*'], 'topProductsPage');
     }
 
     private function latestSales()
