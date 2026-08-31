@@ -197,11 +197,10 @@ class ProductIndex extends Component
                 'sku' => $validated['sku'],
                 'barcode' => $validated['barcode'] ?? null,
                 'description' => $this->description,
-                'purchase_price' => (int) $validated['purchase_price'],
                 'selling_price' => (int) $validated['selling_price'],
 
-                // average_cost tidak ikut diubah saat edit produk,
-                // karena nilai ini sudah dipengaruhi pembelian dan moving average.
+                // purchase_price dan average_cost tidak ditimpa saat edit produk,
+                // karena nilai-nilai ini dikelola secara akurat melalui transaksi Pembelian & Moving Average.
 
                 'minimum_stock' => (int) $validated['minimum_stock'],
                 'is_active' => $this->is_active,

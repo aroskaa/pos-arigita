@@ -400,7 +400,9 @@
 
                     <div>
                         <div class="mb-2 flex items-center justify-between">
-                            <label class="block text-sm font-semibold text-slate-700">Harga Beli Terakhir</label>
+                            <label class="block text-sm font-semibold text-slate-700">
+                                {{ $productId ? 'Harga Beli Terakhir' : 'Harga Beli Awal' }}
+                            </label>
                             @if ($productId && $average_cost)
                                 <span class="rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
                                     HPP: Rp {{ number_format($average_cost, 0, ',', '.') }}
@@ -434,9 +436,15 @@
                                 x-model="display"
                                 x-on:input="format($event.target.value)"
                                 placeholder="0"
-                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                @readonly($productId)
+                                class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 @if($productId) bg-slate-100 text-slate-500 cursor-not-allowed @endif"
                             >
                         </div>
+                        @if ($productId)
+                            <p class="mt-1 text-xs text-slate-500">
+                                Harga beli & HPP diperbarui otomatis saat transaksi Pembelian dari supplier.
+                            </p>
+                        @endif
                         @error('purchase_price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
