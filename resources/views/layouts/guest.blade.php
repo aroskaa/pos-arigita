@@ -7,6 +7,7 @@
         <meta name="description" content="Ari Gita Grosir — Distributor minuman grosir terpercaya di Denpasar, Bali. Masuk atau daftar untuk mulai memesan.">
 
         <title>{{ config('app.name', 'Ari Gita Grosir') }} — Masuk atau Daftar</title>
+        <link rel="icon" type="image/png" href="{{ asset('images/logo-ag.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -38,12 +39,67 @@
             .glow-1 { width: 450px; height: 450px; background: #93C5FD; top: -120px; left: -100px; }
             .glow-2 { width: 380px; height: 380px; background: #60A5FA; bottom: -80px; right: -80px; }
 
+            /* ── Top Navbar ── */
+            .guest-navbar {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+                box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            }
+            .guest-navbar-inner {
+                max-width: 1320px;
+                margin: 0 auto;
+                padding: 12px 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .guest-nav-brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+            }
+            .guest-nav-brand-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 3px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+                overflow: hidden;
+            }
+            .guest-nav-brand-icon img { width: 100%; height: 100%; object-fit: contain; }
+            .guest-nav-brand-text {
+                font-size: 1.05rem;
+                font-weight: 800;
+                color: #0F172A;
+                letter-spacing: -0.2px;
+            }
+            .guest-nav-brand-text span { color: #2563EB; }
+            .guest-nav-link {
+                font-size: 0.88rem;
+                font-weight: 600;
+                color: #475569;
+                text-decoration: none;
+            }
+            .guest-nav-link:hover { color: #0F172A; }
+
             /* ── Main container ── */
             .auth-container {
                 position: relative;
                 z-index: 1;
                 display: flex;
-                min-height: 100vh;
+                min-height: calc(100vh - 57px);
                 align-items: center;
                 justify-content: center;
                 padding: 32px 24px;
@@ -59,7 +115,7 @@
                 text-align: center;
                 padding: 20px;
             }
-            .branding-panel img {
+            .branding-panel .branding-illustration {
                 width: 100%;
                 max-width: 340px;
                 border-radius: 28px;
@@ -308,10 +364,30 @@
         <div class="ambient-glow glow-1"></div>
         <div class="ambient-glow glow-2"></div>
 
+        <!-- Navbar -->
+        <nav class="guest-navbar">
+            <div class="guest-navbar-inner">
+                <a href="/" class="guest-nav-brand">
+                    <div class="guest-nav-brand-icon">
+                        <img src="{{ asset('images/logo-ag.png') }}" alt="Ari Gita Grosir">
+                    </div>
+                    <span class="guest-nav-brand-text">Ari Gita <span>Grosir</span></span>
+                </a>
+                <a href="/" class="guest-nav-link">← Kembali ke Beranda</a>
+            </div>
+        </nav>
+
         <div class="auth-container">
             <!-- Branding Panel -->
             <div class="branding-panel">
-                <img src="{{ asset('images/pos-clay-illustration.png') }}" alt="Ari Gita Grosir">
+                <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:16px;background:#fff;border:1px solid #e2e8f0;padding:6px 14px 6px 6px;border-radius:9999px;box-shadow:0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e2e8f0;flex-shrink:0;">
+                        <img src="{{ asset('images/logo-ag.png') }}" alt="Logo AG" style="max-width:75%;max-height:75%;object-fit:contain;">
+                    </div>
+                    <span style="font-size:13px;font-weight:800;color:#0f172a;letter-spacing:0.5px;">CV. ARI GITA</span>
+                </div>
+
+                <img class="branding-illustration" src="{{ asset('images/pos-clay-illustration.png') }}" alt="Ari Gita Grosir">
 
                 <h1 class="branding-title">
                     Selamat Datang di<br><span>Ari Gita Grosir</span>

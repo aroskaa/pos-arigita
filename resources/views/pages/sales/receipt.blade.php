@@ -317,6 +317,7 @@
         <div class="receipt-wrapper">
             <div class="receipt">
                 <div class="center">
+                    <img src="{{ asset('images/logo-ag.png') }}" alt="Logo" style="width: 32px; height: auto; margin-bottom: 2px; display: inline-block;">
                     <div class="store-name">CV Ari Gita Grosir</div>
                     @if (request()->boolean('is_copy'))
                         <div class="store-subtitle bold" style="font-weight: 700; font-size: {{ $is58 ? '9px' : '10.5px' }}; margin-top: 2px;">[ STRUK COPY ]</div>

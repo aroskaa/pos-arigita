@@ -7,6 +7,7 @@
     <meta name="description" content="CV. Ari Gita Grosir — Distributor minuman grosir terpercaya di Denpasar, Bali. Pesan online dengan mudah, harga grosir terbaik.">
 
     <title>Ari Gita Grosir — Distributor Minuman Grosir Terpercaya</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-ag.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -25,39 +26,57 @@
             color: #0F172A;
         }
 
-        /* Ambient subtle glow elements */
+        /* AMBIENT GLOW */
         .ambient-glow {
             position: fixed;
             border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.25;
-            z-index: 0;
+            filter: blur(120px);
+            opacity: 0.45;
             pointer-events: none;
+            z-index: 0;
         }
-        .glow-1 { width: 500px; height: 500px; background: #93C5FD; top: -150px; left: -100px; }
-        .glow-2 { width: 450px; height: 450px; background: #60A5FA; bottom: -120px; right: -80px; }
+        .glow-1 {
+            top: -100px;
+            left: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #93C5FD 0%, #3B82F6 100%);
+        }
+        .glow-2 {
+            bottom: -150px;
+            right: -100px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, #BFDBFE 0%, #60A5FA 100%);
+        }
 
         .page-wrapper {
             position: relative;
             z-index: 1;
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
 
-        /* ══════════════════════════════════════ */
-        /* NAVBAR                                  */
-        /* ══════════════════════════════════════ */
+        /* NAVBAR */
         .navbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 56px;
             position: sticky;
             top: 0;
             z-index: 100;
+            width: 100%;
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border-bottom: 1px solid rgba(226, 232, 240, 0.8);
             box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .navbar-inner {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .nav-brand {
             display: flex;
@@ -69,13 +88,16 @@
             width: 42px;
             height: 42px;
             border-radius: 12px;
-            background: #2563EB;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            padding: 3px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
         }
-        .nav-brand-icon svg { width: 22px; height: 22px; fill: white; }
+        .nav-brand-icon img { width: 100%; height: 100%; object-fit: contain; }
         .nav-brand-text {
             font-size: 1.25rem;
             font-weight: 800;
@@ -375,12 +397,12 @@
     <div class="ambient-glow glow-1"></div>
     <div class="ambient-glow glow-2"></div>
 
-    <div class="page-wrapper">
-        <!-- NAVBAR -->
-        <nav class="navbar">
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-inner">
             <a href="/" class="nav-brand">
                 <div class="nav-brand-icon">
-                    <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 12 7.4 15.38 12 17 10.83 14.92 8H20v6z"/></svg>
+                    <img src="{{ asset('images/logo-ag.png') }}" alt="Ari Gita Grosir">
                 </div>
                 <div class="nav-brand-text">Ari Gita <span>Grosir</span></div>
             </a>
@@ -388,8 +410,10 @@
                 <a href="{{ route('login') }}" class="nav-btn nav-btn-ghost">Masuk</a>
                 <a href="{{ route('register') }}" class="nav-btn nav-btn-primary">Daftar</a>
             </div>
-        </nav>
+        </div>
+    </nav>
 
+    <div class="page-wrapper">
         <!-- HERO SECTION -->
         <section class="hero">
             <div class="hero-content">
@@ -467,11 +491,11 @@
                 </div>
             </div>
         </section>
-
-        <!-- FOOTER -->
-        <footer class="footer">
-            <p>&copy; {{ date('Y') }} CV. Ari Gita Grosir. Semua hak dilindungi.</p>
-        </footer>
     </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>&copy; {{ date('Y') }} CV. Ari Gita Grosir. Semua hak dilindungi.</p>
+    </footer>
 </body>
 </html>

@@ -1,51 +1,31 @@
-<div class="min-h-screen">
-    {{-- Header --}}
-    <header class="border-b border-slate-200 bg-white">
-        <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 md:flex-row md:items-center md:justify-between">
-            <div>
-                <p class="text-sm font-semibold text-blue-700">
-                    CV Ari Gita Grosir
-                </p>
-
-                <h1 class="mt-1 text-3xl font-bold text-slate-900">
-                    Riwayat Order Saya
-                </h1>
-
-                <p class="mt-2 text-sm text-slate-500">
-                    Lacak status pesanan, rincian produk, dan histori order grosir Anda.
-                </p>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-                <a
-                    href="{{ route('customer-orders.create') }}"
-                    class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 hover:text-slate-900"
-                >
-                    <svg class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
+<div class="min-h-screen bg-slate-50">
+    {{-- Navbar --}}
+    <nav style="position:sticky;top:0;z-index:100;width:100%;background:rgba(255,255,255,0.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(226,232,240,0.9);box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+        <div style="max-width:1320px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;">
+            <!-- Brand -->
+            <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+                <div style="width:38px;height:38px;border-radius:10px;background:#fff;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;padding:3px;box-shadow:0 2px 6px rgba(0,0,0,0.05);overflow:hidden;">
+                    <img src="{{ asset('images/logo-ag.png') }}" alt="Ari Gita Grosir" style="width:100%;height:100%;object-fit:contain;">
+                </div>
+                <span style="font-size:1.1rem;font-weight:800;color:#0F172A;letter-spacing:-0.2px;">Ari Gita <span style="color:#2563EB;">Grosir</span></span>
+            </a>
+            <!-- Actions -->
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <a href="{{ route('customer-orders.create') }}" style="display:inline-flex;align-items:center;gap:6px;font-size:0.9rem;font-weight:600;padding:8px 18px;border-radius:9999px;border:1px solid #e2e8f0;background:#f8fafc;color:#475569;text-decoration:none;">
+                    <svg style="width:15px;height:15px;" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     Buat Order Baru
                 </a>
-
-                <div class="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm">
-                    Riwayat Order Saya
-                </div>
-
+                <span style="font-size:0.9rem;font-weight:600;padding:8px 18px;border-radius:9999px;background:#2563EB;color:#fff;">Riwayat Order Saya</span>
                 @auth
-                    <div class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
-                        {{ auth()->user()->name }}
-                    </div>
-
-                    <form method="POST" action="{{ route('logout') }}">
+                    <span style="font-size:0.9rem;font-weight:600;padding:8px 18px;border-radius:9999px;background:#EFF6FF;color:#1D4ED8;">{{ auth()->user()->name }}</span>
+                    <form method="POST" action="{{ route('logout') }}" style="display:inline;">
                         @csrf
-                        <button type="submit" class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-200">
-                            Logout
-                        </button>
+                        <button type="submit" style="font-size:0.9rem;font-weight:600;padding:8px 18px;border-radius:9999px;border:1px solid #e2e8f0;background:#f8fafc;color:#475569;cursor:pointer;">Logout</button>
                     </form>
                 @endauth
             </div>
         </div>
-    </header>
+    </nav>
 
     <main class="mx-auto max-w-7xl px-4 py-8">
         {{-- Search & Status Filter Section --}}

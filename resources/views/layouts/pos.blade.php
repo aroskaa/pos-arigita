@@ -6,6 +6,7 @@
     <title>{{ $title ?? 'POS Ari Gita Grosir' }}</title>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-ag.png') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -40,8 +41,8 @@
         >
             <div class="h-20 shrink-0 flex items-center justify-between px-6 border-b border-slate-100">
                 <div class="flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
-                        AG
+                    <div class="h-10 w-10 rounded-xl bg-white border border-slate-200/80 shadow-sm flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                        <img src="{{ asset('images/logo-ag.png') }}" alt="Ari Gita POS" class="h-full w-full object-contain">
                     </div>
                     <div>
                         <h1 class="text-base font-bold text-slate-900 tracking-tight">Ari Gita POS</h1>
