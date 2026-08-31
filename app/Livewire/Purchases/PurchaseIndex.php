@@ -367,6 +367,7 @@ class PurchaseIndex extends Component
                     'stock' => $stockAfter,
                     'purchase_price' => $unitCost,
                     'average_cost' => $averageCostAfter,
+                    'selling_price' => $sellingPriceAfter,
                 ]);
 
                 $tierOne = ProductPrice::query()
@@ -383,6 +384,18 @@ class PurchaseIndex extends Component
                         'max_qty' => null,
                         'price' => $sellingPriceAfter,
                     ]);
+                }
+
+                // Adjust wholesale tiers if they fall below new HPP
+                $higherTiers = ProductPrice::query()
+                    ->where('product_id', '=', $product->id)
+                    ->where('min_qty', '>', 1)
+                    ->get();
+
+                foreach ($higherTiers as $tier) {
+                    if ((float) $tier->price < $averageCostAfter) {
+                        $tier->update(['price' => $sellingPriceAfter]);
+                    }
                 }
 
                 StockMovement::query()->create([

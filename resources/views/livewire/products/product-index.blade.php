@@ -399,7 +399,14 @@
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">Harga Beli</label>
+                        <div class="mb-2 flex items-center justify-between">
+                            <label class="block text-sm font-semibold text-slate-700">Harga Beli Terakhir</label>
+                            @if ($productId && $average_cost)
+                                <span class="rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                                    HPP: Rp {{ number_format($average_cost, 0, ',', '.') }}
+                                </span>
+                            @endif
+                        </div>
                         <div
                             x-data="{
                                 raw: @entangle('purchase_price').live,
@@ -436,7 +443,18 @@
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">Harga Jual</label>
+                        <div class="mb-2 flex items-center justify-between">
+                            <label class="block text-sm font-semibold text-slate-700">Harga Jual</label>
+                            @if ($purchase_price)
+                                <button
+                                    type="button"
+                                    wire:click="$set('selling_price', {{ (int) ceil(($purchase_price * 1.05) / 100) * 100 }})"
+                                    class="text-xs font-semibold text-blue-600 hover:text-blue-800 underline"
+                                >
+                                    Set +5% (Rp {{ number_format((int) ceil(($purchase_price * 1.05) / 100) * 100, 0, ',', '.') }})
+                                </button>
+                            @endif
+                        </div>
                         <div
                             x-data="{
                                 raw: @entangle('selling_price').live,
@@ -467,6 +485,11 @@
                                 class="w-full rounded-2xl border border-slate-200 px-4 py-3 pl-12 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             >
                         </div>
+                        @if ($selling_price && $purchase_price && $selling_price < $purchase_price)
+                            <p class="mt-1 text-xs font-semibold text-amber-600">
+                                ⚠️ Peringatan: Harga jual lebih rendah dari harga beli (rugi modal).
+                            </p>
+                        @endif
                         @error('selling_price')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror

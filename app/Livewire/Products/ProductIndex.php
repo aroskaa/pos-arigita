@@ -38,6 +38,7 @@ class ProductIndex extends Component
 
     public ?int $purchase_price = null;
     public ?int $selling_price = null;
+    public ?int $average_cost = null;
 
     public int|string|null $stock = null;
     public int|string|null $minimum_stock = null;
@@ -146,7 +147,9 @@ class ProductIndex extends Component
         $this->unit_id = $product->unit_id;
         $this->unitInput = $product->unit?->name ?? '';
         $this->purchase_price = (int) $product->purchase_price;
-        $this->selling_price = (int) $product->selling_price;
+        $tierOne = $product->prices->firstWhere('min_qty', 1);
+        $this->selling_price = $tierOne ? (int) $tierOne->price : (int) $product->selling_price;
+        $this->average_cost = (int) $product->average_cost;
         $this->stock = $product->stock;
         $this->minimum_stock = $product->minimum_stock;
         $this->is_active = (bool) $product->is_active;
@@ -195,6 +198,7 @@ class ProductIndex extends Component
                 'barcode' => $validated['barcode'] ?? null,
                 'description' => $this->description,
                 'purchase_price' => (int) $validated['purchase_price'],
+                'selling_price' => (int) $validated['selling_price'],
 
                 // average_cost tidak ikut diubah saat edit produk,
                 // karena nilai ini sudah dipengaruhi pembelian dan moving average.
@@ -488,6 +492,7 @@ class ProductIndex extends Component
         $this->unitInput = '';
         $this->purchase_price = null;
         $this->selling_price = null;
+        $this->average_cost = null;
         $this->stock = null;
         $this->minimum_stock = null;
         $this->is_active = true;
