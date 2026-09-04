@@ -44,7 +44,7 @@
                     </div>
                 </div>
 
-                <div class="mt-5">
+                <div class="mt-5 flex items-stretch gap-3">
                     <input
                         id="customer-order-search"
                         type="text"
@@ -53,54 +53,51 @@
                         autocomplete="off"
                         class="w-full rounded-2xl border border-slate-200 px-5 py-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     >
+
+                    <button
+                        type="button"
+                        wire:click="$toggle('filterPromoOnly')"
+                        class="flex shrink-0 items-center gap-2 self-stretch rounded-xl border px-4 text-sm font-semibold transition
+                                {{ $filterPromoOnly
+                                    ? 'border-red-600 bg-red-600 text-white shadow-sm'
+                                    : 'border-red-200 bg-red-50 text-red-600 hover:border-red-400 hover:bg-red-100' }}"
+                    >
+                        <span class="relative flex h-2 w-2">
+                            @if ($filterPromoOnly)
+                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
+                            @endif
+                            <span class="relative inline-flex h-2 w-2 rounded-full {{ $filterPromoOnly ? 'bg-white' : 'bg-red-500' }}"></span>
+                        </span>
+                        Promo
+                        @if ($promoProductCount > 0)
+                            <span class="rounded-md px-1.5 py-0.5 text-[11px] font-bold {{ $filterPromoOnly ? 'bg-white/20 text-white' : 'bg-red-600 text-white' }}">
+                                {{ $promoProductCount }}
+                            </span>
+                        @endif
+                    </button>
                 </div>
 
-                <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                <div class="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
+                    @foreach ($featuredProducts as $product)
+                        @include('livewire.customer-orders._product-card', ['wireKey' => 'customer-order-product-' . $product->id])
+                    @endforeach
+
                     @forelse ($products as $product)
-                        <button
-                            type="button"
-                            wire:key="customer-order-product-{{ $product->id }}"
-                            wire:click="addToCart({{ $product->id }})"
-                            wire:loading.attr="disabled"
-                            wire:target="addToCart({{ $product->id }})"
-                            class="rounded-3xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-blue-300 hover:bg-blue-50 disabled:pointer-events-none disabled:opacity-60"
-                        >
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <h3 class="font-bold text-slate-900">
-                                        {{ $product->name }}
-                                    </h3>
-
-                                    <p class="mt-1 text-xs text-slate-500">
-                                        {{ $product->sku }}
-                                    </p>
-                                </div>
-
-                                <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                                    Stok {{ number_format($product->stock, 0, ',', '.') }} {{ $product->unit?->abbreviation }}
-                                </span>
-                            </div>
-
-                            <div class="mt-5 flex items-end justify-between">
-                                <div>
-                                    <p class="text-xs text-slate-500">Harga mulai</p>
-
-                                    <p class="text-lg font-bold text-blue-700">
-                                        Rp {{ number_format($product->selling_price, 0, ',', '.') }}
-                                    </p>
-                                </div>
-
-                                <span class="text-sm font-semibold text-slate-500">
-                                    + Tambah
-                                </span>
-                            </div>
-                        </button>
+                        @include('livewire.customer-orders._product-card', ['wireKey' => 'customer-order-product-' . $product->id])
                     @empty
-                        <div class="col-span-full rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-500">
-                            Produk tidak ditemukan.
-                        </div>
+                        @if ($featuredProducts->isEmpty())
+                            <div class="col-span-full rounded-xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-500">
+                                {{ $filterPromoOnly ? 'Tidak ada produk promo saat ini.' : 'Produk tidak ditemukan.' }}
+                            </div>
+                        @endif
                     @endforelse
                 </div>
+
+                @if ($products->hasPages())
+                    <div class="mt-6">
+                        {{ $products->links('vendor.pagination.tailwind') }}
+                    </div>
+                @endif
             </div>
         </section>
 
@@ -138,15 +135,15 @@
                     @forelse ($cart as $item)
                         <div
                             wire:key="customer-order-cart-{{ $item['product_id'] }}"
-                            class="rounded-2xl border border-slate-200 p-4"
+                            class="rounded-xl border border-slate-200 p-3.5"
                         >
                             <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <h4 class="font-semibold text-slate-900">
+                                <div class="min-w-0">
+                                    <h4 class="truncate font-semibold text-slate-900">
                                         {{ $item['name'] }}
                                     </h4>
 
-                                    <p class="text-xs text-slate-500">
+                                    <p class="truncate text-xs text-slate-500">
                                         {{ $item['sku'] }}
                                     </p>
                                 </div>
@@ -154,14 +151,14 @@
                                 <button
                                     type="button"
                                     wire:click="removeItem({{ $item['product_id'] }})"
-                                    class="text-sm font-bold text-red-600"
+                                    class="shrink-0 text-sm font-bold text-red-600"
                                 >
                                     ×
                                 </button>
                             </div>
 
                             <div class="mt-4 flex items-center justify-between">
-                                <div class="flex items-center gap-2">
+                                <div class="flex shrink-0 items-center gap-2">
                                     <button
                                         type="button"
                                         wire:click="decreaseQuantity({{ $item['product_id'] }})"
@@ -190,19 +187,32 @@
                                     </button>
                                 </div>
 
-                                <div class="text-right">
-                                    <p class="text-xs text-slate-500">
-                                        Rp {{ number_format($item['unit_price'], 0, ',', '.') }}
+                                <div class="min-w-0 text-right">
+                                    @if (isset($cartTierInfo[$item['product_id']]) && $cartTierInfo[$item['product_id']]['is_bulk'])
+                                        <p class="flex items-center justify-end gap-1.5 text-xs text-slate-400">
+                                            <span class="line-through">Rp {{ number_format($cartTierInfo[$item['product_id']]['tier_one_price'], 0, ',', '.') }}</span>
+                                            <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Grosir</span>
+                                        </p>
+                                    @endif
+
+                                    <p class="text-xs {{ isset($cartTierInfo[$item['product_id']]) && $cartTierInfo[$item['product_id']]['is_bulk'] ? 'font-bold text-emerald-700' : 'text-slate-500' }}">
+                                        Rp {{ number_format($item['unit_price'], 0, ',', '.') }} / {{ $item['unit'] }}
                                     </p>
 
                                     <p class="font-bold text-slate-900">
                                         Rp {{ number_format($item['subtotal'], 0, ',', '.') }}
                                     </p>
+
+                                    @if (isset($cartTierInfo[$item['product_id']]) && $cartTierInfo[$item['product_id']]['next_min_qty'])
+                                        <p class="mt-1 text-[10px] font-semibold text-emerald-600">
+                                            +{{ $cartTierInfo[$item['product_id']]['next_min_qty'] - (int) $item['quantity'] }} lagi → Rp {{ number_format($cartTierInfo[$item['product_id']]['next_price'], 0, ',', '.') }}/{{ $item['unit'] }}
+                                        </p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
+                        <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
                             Keranjang order masih kosong.
                         </div>
                     @endforelse
@@ -222,6 +232,36 @@
                             Rp {{ number_format($estimatedTotal, 0, ',', '.') }}
                         </span>
                     </div>
+
+                    @if ($minOrderTotal > 0 || $minOrderQty > 0)
+                        <div class="mt-3 rounded-2xl p-4 text-sm {{ $this->meetsMinimumOrder() ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700' }}">
+                            <p class="font-bold">{{ $this->meetsMinimumOrder() ? '✓ Gratis biaya pengiriman' : 'Info minimal order pengiriman' }}</p>
+
+                            <p class="mt-1">
+                                @if ($minOrderTotal > 0)
+                                    Total minimal Rp {{ number_format($minOrderTotal, 0, ',', '.') }}.
+                                @endif
+
+                                @if ($minOrderQty > 0)
+                                    Jumlah minimal {{ number_format($minOrderQty, 0, ',', '.') }} unit.
+                                @endif
+                            </p>
+
+                            @if (! $this->meetsMinimumOrder())
+                                <p class="mt-1 font-semibold">
+                                    Order di bawah minimum tetap bisa dikirim, namun akan dikenakan biaya pengiriman.
+
+                                    @if ($minOrderQty > 0 && $totalQuantity < $minOrderQty)
+                                        (Tambah {{ number_format($minOrderQty - $totalQuantity, 0, ',', '.') }} unit lagi untuk bebas ongkir.)
+                                    @elseif ($minOrderTotal > 0 && $estimatedTotal < $minOrderTotal)
+                                        (Tambah Rp {{ number_format($minOrderTotal - $estimatedTotal, 0, ',', '.') }} lagi untuk bebas ongkir.)
+                                    @endif
+                                </p>
+                            @else
+                                <p class="mt-1">Order Anda sudah memenuhi minimal pengiriman.</p>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <div

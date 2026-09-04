@@ -61,6 +61,7 @@
                     <th>Customer</th>
                     <th>Subtotal</th>
                     <th>Diskon</th>
+                    <th>Promo/Grosir</th>
                     <th>Total</th>
                     <th>Kasir</th>
                 </tr>
@@ -73,6 +74,7 @@
                         <td>{{ $sale->customer?->name ?? 'Walk-in Customer' }}</td>
                         <td class="right">Rp {{ number_format($sale->subtotal, 0, ',', '.') }}</td>
                         <td class="right">Rp {{ number_format($sale->discount_total, 0, ',', '.') }}</td>
+                        <td class="right">Rp {{ number_format($sale->items->sum(fn ($item) => $item->tier_savings), 0, ',', '.') }}</td>
                         <td class="right bold">Rp {{ number_format($sale->grand_total, 0, ',', '.') }}</td>
                         <td>{{ $sale->cashier?->name ?? '-' }}</td>
                     </tr>

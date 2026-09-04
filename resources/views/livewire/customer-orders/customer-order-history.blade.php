@@ -246,13 +246,13 @@
                                                     <span class="text-[10px] text-slate-400">{{ $item->product?->sku }}</span>
                                                 </td>
                                                 <td class="px-4 py-3 text-center font-medium">
-                                                    {{ number_format($item->quantity, 0, ',', '.') }} {{ $item->unit_abbreviation }}
+                                                    {{ number_format($item->quantity, 0, ',', '.') }} {{ $item->product?->unit?->abbreviation }}
                                                 </td>
                                                 <td class="px-4 py-3 text-right">
-                                                    Rp {{ number_format($item->estimated_unit_price, 0, ',', '.') }}
+                                                    Rp {{ number_format($item->unit_price, 0, ',', '.') }}
                                                 </td>
                                                 <td class="px-4 py-3 text-right font-bold text-slate-900">
-                                                    Rp {{ number_format($item->estimated_subtotal, 0, ',', '.') }}
+                                                    Rp {{ number_format($item->subtotal, 0, ',', '.') }}
                                                 </td>
                                             </tr>
                                         @endforeach

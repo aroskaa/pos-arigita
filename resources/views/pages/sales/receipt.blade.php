@@ -367,7 +367,12 @@
                             <span>
                                 {{ number_format($item->quantity, 0, ',', '.') }}
                                 x
-                                {{ number_format($item->unit_price, 0, ',', '.') }}
+                                @if ((float) $item->base_price > (float) $item->unit_price)
+                                    <s>{{ number_format($item->base_price, 0, ',', '.') }}</s>
+                                    → {{ number_format($item->unit_price, 0, ',', '.') }}
+                                @else
+                                    {{ number_format($item->unit_price, 0, ',', '.') }}
+                                @endif
                             </span>
 
                             <span>
@@ -384,12 +389,22 @@
                     </div>
                 @endforeach
 
+                @php($totalTierSavings = $sale->items->sum(fn ($item) => $item->tier_savings))
+                @php($baseSubtotal = $sale->items->sum(fn ($item) => (int) $item->quantity * (float) ($item->base_price ?: $item->unit_price)))
+
                 <div class="divider"></div>
 
                 <div class="summary-row">
                     <span>Subtotal</span>
-                    <span>Rp {{ number_format($sale->subtotal, 0, ',', '.') }}</span>
+                    <span>Rp {{ number_format($baseSubtotal, 0, ',', '.') }}</span>
                 </div>
+
+                @if ($totalTierSavings > 0)
+                    <div class="summary-row">
+                        <span>Potongan (Promo/Grosir)</span>
+                        <span>- Rp {{ number_format($totalTierSavings, 0, ',', '.') }}</span>
+                    </div>
+                @endif
 
                 @if ($sale->discount_total > 0)
                     <div class="summary-row">
@@ -411,11 +426,6 @@
                 <div class="summary-row">
                     <span>Kembali</span>
                     <span>Rp {{ number_format($sale->change_amount, 0, ',', '.') }}</span>
-                </div>
-
-                <div class="summary-row">
-                    <span>Metode</span>
-                    <span>{{ strtoupper($sale->payment_method) }}</span>
                 </div>
 
                 @if ($sale->status === 'cancelled')

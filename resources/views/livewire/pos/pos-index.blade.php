@@ -93,6 +93,13 @@
                                     <p class="text-lg font-bold text-blue-700">
                                         Rp {{ number_format($product->selling_price, 0, ',', '.') }}
                                     </p>
+                                    @if (isset($promoInfo[$product->id]))
+                                        <p class="mt-1 text-[11px] font-medium text-red-500">
+                                            <span class="rounded bg-red-50 px-1 py-0.5">Promo</span>
+                                            <s class="text-slate-400">Rp {{ number_format($promoInfo[$product->id]['base_price'], 0, ',', '.') }}</s>
+                                            {{ $promoInfo[$product->id]['label'] }}
+                                        </p>
+                                    @endif
                                 </div>
 
                                 <span class="text-sm font-semibold text-slate-500">
@@ -594,8 +601,8 @@
                                     >
                                 </div>
 
-                                <div class="flex gap-2">
-                                    <template x-for="amount in [{{ (int) $grandTotal }}, {{ (int) ceil($grandTotal / 10000) * 10000 }}, {{ (int) ceil($grandTotal / 50000) * 50000 }}, {{ (int) ceil($grandTotal / 100000) * 100000 }}]" :key="amount">
+                                <div class="flex flex-wrap gap-2">
+                                    <template x-for="amount in @js($quickPayAmounts)" :key="amount">
                                         <button
                                             type="button"
                                             x-show="amount >= grandTotal"

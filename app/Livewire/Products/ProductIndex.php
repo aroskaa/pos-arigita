@@ -97,7 +97,12 @@ class ProductIndex extends Component
     {
         return view('livewire.products.product-index', [
             'products' => Product::query()
-                ->with(['category', 'unit', 'prices'])
+                ->with([
+                    'category',
+                    'unit',
+                    'prices',
+                    'promos' => fn ($query) => $query->active(),
+                ])
                 ->when($this->search !== '', function ($query): void {
                     $query->where(function ($q): void {
                         $q->where('name', 'like', '%' . $this->search . '%')
@@ -119,6 +124,10 @@ class ProductIndex extends Component
             'units' => Unit::query()
                 ->orderBy('name', 'asc')
                 ->get(),
+
+            'bulkProduct' => $this->bulkProductId
+                ? Product::query()->with('prices')->find($this->bulkProductId)
+                : null,
         ]);
     }
 
@@ -313,9 +322,17 @@ class ProductIndex extends Component
 
     public function addBulkPriceRow(): void
     {
+        $lastRow = collect($this->bulkPrices)->last();
+
+        $nextMinQty = null;
+
+        if ($lastRow && filled($lastRow['max_qty'])) {
+            $nextMinQty = (int) $lastRow['max_qty'] + 1;
+        }
+
         $this->bulkPrices[] = [
             'id' => null,
-            'min_qty' => null,
+            'min_qty' => $nextMinQty,
             'max_qty' => null,
             'price' => null,
         ];

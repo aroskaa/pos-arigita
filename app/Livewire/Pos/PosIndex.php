@@ -63,18 +63,43 @@ class PosIndex extends Component
 
     public function render()
     {
+        $products = Product::query()
+            ->with([
+                'category',
+                'unit',
+                'prices',
+                'promos' => fn ($query) => $query->active(),
+            ])
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->where('name', 'like', '%' . $this->search . '%')
+                    ->orWhere('sku', 'like', '%' . $this->search . '%')
+                    ->orWhere('barcode', 'like', '%' . $this->search . '%');
+            })
+            ->latest()
+            ->limit(12)
+            ->get();
+
+        $promoInfo = [];
+
+        foreach ($products as $product) {
+            $basePrice = $product->getBasePriceForQuantity(1);
+
+            $promo = $product->promos
+                ->sortBy(fn ($candidate) => $candidate->applyToPrice($basePrice))
+                ->first();
+
+            if ($promo && $promo->applyToPrice($basePrice) < $basePrice) {
+                $promoInfo[$product->id] = [
+                    'base_price' => $basePrice,
+                    'label' => $promo->discountLabel(),
+                ];
+            }
+        }
+
         return view('livewire.pos.pos-index', [
-            'products' => Product::query()
-                ->with(['category', 'unit', 'prices'])
-                ->where('is_active', true)
-                ->where(function ($query) {
-                    $query->where('name', 'like', '%' . $this->search . '%')
-                        ->orWhere('sku', 'like', '%' . $this->search . '%')
-                        ->orWhere('barcode', 'like', '%' . $this->search . '%');
-                })
-                ->latest()
-                ->limit(12)
-                ->get(),
+            'products' => $products,
+            'promoInfo' => $promoInfo,
 
             'customers' => Customer::query()
             ->when($this->customerName, function ($query) {
@@ -89,7 +114,26 @@ class PosIndex extends Component
             'subtotal' => $this->subtotal(),
             'discountTotal' => $this->discountTotal(),
             'grandTotal' => $this->grandTotal(),
+            'quickPayAmounts' => $this->quickPayAmounts($this->grandTotal()),
         ]);
+    }
+
+    private function quickPayAmounts(float $total): array
+    {
+        // Nominal cepat: bulatkan ke atas ke pecahan uang kertas Indonesia yang realistis.
+        $amounts = collect([(int) $total]);
+
+        foreach ([500, 1000, 2000, 5000, 10000, 20000, 50000, 100000] as $step) {
+            $amounts->push((int) (ceil($total / $step) * $step));
+        }
+
+        return $amounts
+            ->unique()
+            ->sort()
+            ->values()
+            ->filter(fn ($amount) => $amount >= $total)
+            ->take(4)
+            ->all();
     }
 
     public function mount(): void
@@ -409,6 +453,7 @@ class PosIndex extends Component
 
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
+                    'base_price' => $product->getBasePriceForQuantity(1),
                     'cost_price' => $product->average_cost,
                     'discount_amount' => $this->itemDiscountAmount($item),
                     'subtotal' => $this->itemNetSubtotal($item),

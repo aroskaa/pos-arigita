@@ -142,8 +142,27 @@
                                 </div>
                             </td>
 
-                            <td class="px-4 py-4 text-sm font-semibold text-slate-900">
-                                Rp {{ number_format($product->selling_price, 0, ',', '.') }}
+                            <td class="px-4 py-4">
+                                @php
+                                    $basePrice = $product->getBasePriceForQuantity(1);
+                                    $activePromo = $product->promos->sortBy(fn ($p) => $p->applyToPrice($basePrice))->first();
+                                @endphp
+
+                                <span class="text-sm font-semibold text-slate-900">
+                                    Rp {{ number_format($basePrice, 0, ',', '.') }}
+                                </span>
+
+                                @if ($activePromo)
+                                    <div class="mt-0.5">
+                                        <span class="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                                            PROMO {{ $activePromo->discountLabel() }}
+                                        </span>
+
+                                        <span class="ml-1 text-xs font-semibold text-red-600">
+                                            → Rp {{ number_format($product->applyActivePromo($basePrice), 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                @endif
                             </td>
 
                             <td class="px-4 py-4">
@@ -658,6 +677,29 @@
                         Kosongkan kolom maksimum jika harga berlaku untuk jumlah pembelian tanpa batas.
                     </div>
 
+                    @if ($bulkProduct)
+                        @php($bulkFloor = \App\Models\Product::promoPriceFloor((float) $bulkProduct->average_cost))
+                        <div class="mt-4 grid grid-cols-3 gap-3">
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-center">
+                                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">HPP</p>
+                                <p class="mt-0.5 text-sm font-bold text-slate-900">Rp {{ number_format($bulkProduct->average_cost, 0, ',', '.') }}</p>
+                            </div>
+
+                            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center">
+                                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Batas Aman</p>
+                                <p class="mt-0.5 text-sm font-bold text-amber-800">Rp {{ number_format($bulkFloor, 0, ',', '.') }}</p>
+                            </div>
+
+                            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-center">
+                                <p class="text-[11px] font-semibold uppercase tracking-wide text-blue-700">Harga Jual</p>
+                                <p class="mt-0.5 text-sm font-bold text-blue-700">Rp {{ number_format($bulkProduct->getBasePriceForQuantity(1), 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-xs text-slate-500">
+                            Batas aman = HPP + margin minimum. Hindari mengisi harga di bawah angka ini agar penjualan tetap untung.
+                        </p>
+                    @endif
+
                     @error('bulkPrices')
                         <div class="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
                             {{ $message }}
@@ -747,6 +789,12 @@
                                     @error("bulkPrices.$index.price")
                                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                                     @enderror
+
+                                    @if ($bulkProduct && filled($price['price']) && (float) $price['price'] < $bulkFloor)
+                                        <p class="mt-1 text-xs font-semibold text-red-600">
+                                            ⚠ Di bawah batas aman (HPP + margin).
+                                        </p>
+                                    @endif
                                 </div>
 
                                 <div class="flex items-end">

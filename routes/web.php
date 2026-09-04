@@ -73,6 +73,10 @@
             Route::get('/customer-orders', function () {
                 return view('pages.customer-orders.index');
             })->name('customer-orders.index');
+
+            Route::get('/admin/promos', function () {
+                return view('pages.promos.index');
+            })->name('promos.index');
         });
 
         Route::middleware('role:owner,admin,cashier')->group(function () {

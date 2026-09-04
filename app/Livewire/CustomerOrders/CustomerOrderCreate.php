@@ -6,14 +6,24 @@ use App\Models\Customer;
 use App\Models\CustomerOrder;
 use App\Models\CustomerOrderItem;
 use App\Models\Product;
+use App\Models\Promo;
+use App\Models\SaleItem;
+use App\Models\Setting;
 use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class CustomerOrderCreate extends Component
 {
+    use WithPagination;
+
+    protected string $paginationTheme = 'tailwind';
+
     public string $search = '';
+
+    public bool $filterPromoOnly = false;
 
     public array $cart = [];
 
@@ -33,8 +43,20 @@ class CustomerOrderCreate extends Component
 
     public ?string $createdOrderNumber = null;
 
+    public int $minOrderTotal = 0;
+
+    public int $minOrderQty = 0;
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
     public function mount(): void
     {
+        $this->minOrderTotal = (int) Setting::get('min_order_total', 0);
+        $this->minOrderQty = (int) Setting::get('min_order_qty', 0);
+
         $user = Auth::user();
 
         if (! $user || ! $user->isCustomer()) {
@@ -51,23 +73,141 @@ class CustomerOrderCreate extends Component
 
     public function render()
     {
-        return view('livewire.customer-orders.customer-order-create', [
-            'products' => Product::query()
-                ->with(['unit', 'prices'])
-                ->where('is_active', true)
-                ->when($this->search, function ($query) {
-                    $query->where(function ($productQuery) {
-                        $productQuery->where('name', 'like', '%' . $this->search . '%')
-                            ->orWhere('sku', 'like', '%' . $this->search . '%')
-                            ->orWhere('barcode', 'like', '%' . $this->search . '%');
-                    });
-                })
-                ->orderBy('name')
-                ->limit(18)
-                ->get(),
+        $showFeatured = $this->search === '' && ! $this->filterPromoOnly;
 
+        $featuredProducts = $showFeatured
+            ? $this->featuredProducts()
+            : collect();
+
+        $products = Product::query()
+            ->with(['unit', 'prices'])
+            ->where('is_active', true)
+            ->when($this->filterPromoOnly, function ($query): void {
+                $query->whereHas('promos', function ($promoQuery): void {
+                    $promoQuery->active();
+                });
+            })
+            ->when($this->search, function ($query) {
+                $query->where(function ($productQuery) {
+                    $productQuery->where('name', 'like', '%' . $this->search . '%')
+                        ->orWhere('sku', 'like', '%' . $this->search . '%')
+                        ->orWhere('barcode', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($showFeatured, fn ($query) => $query->whereNotIn('id', $featuredProducts->pluck('id')))
+            ->orderBy('name')
+            ->paginate(12);
+
+        $bulkTierByProduct = [];
+
+        $cardProducts = $products->getCollection()->merge($featuredProducts);
+
+        foreach ($cardProducts as $product) {
+            if ($product->prices->count() < 2) {
+                continue;
+            }
+
+            $bestTier = $product->prices->sortByDesc('min_qty')->first();
+
+            $bulkTierByProduct[$product->id] = [
+                'min_qty' => (int) $bestTier->min_qty,
+                'price' => $product->applyActivePromo((float) $bestTier->price),
+            ];
+        }
+
+        $cartTierInfo = [];
+
+        if (! empty($this->cart)) {
+            $cartProducts = Product::query()
+                ->with('prices')
+                ->whereIn('id', array_keys($this->cart))
+                ->get()
+                ->keyBy('id');
+
+            foreach ($this->cart as $productId => $item) {
+                $product = $cartProducts->get((int) $productId);
+
+                if (! $product || $product->prices->count() < 2) {
+                    continue;
+                }
+
+                $prices = $product->prices->sortBy('min_qty');
+                $quantity = (int) $item['quantity'];
+
+                $matchedBulkTier = $prices->first(function ($p) use ($quantity) {
+                    return $p->min_qty > 1
+                        && $p->min_qty <= $quantity
+                        && (is_null($p->max_qty) || $p->max_qty >= $quantity);
+                });
+
+                $nextTier = $prices->first(fn ($p) => $p->min_qty > $quantity);
+
+                $cartTierInfo[(int) $productId] = [
+                    'is_bulk' => (bool) $matchedBulkTier,
+                    'tier_one_price' => $product->applyActivePromo((float) $prices->first()->price),
+                    'next_min_qty' => $nextTier ? (int) $nextTier->min_qty : null,
+                    'next_price' => $nextTier ? $product->applyActivePromo((float) $nextTier->price) : null,
+                ];
+            }
+        }
+
+        return view('livewire.customer-orders.customer-order-create', [
+            'products' => $products,
+            'featuredProducts' => $featuredProducts,
+            'promoProductCount' => $this->promoProductCount(),
+            'promoByProduct' => $this->promoByProduct($cardProducts),
+            'bulkTierByProduct' => $bulkTierByProduct,
+            'cartTierInfo' => $cartTierInfo,
             'estimatedTotal' => $this->estimatedTotal(),
+            'totalQuantity' => $this->totalQuantity(),
         ]);
+    }
+
+    private function featuredProducts()
+    {
+        // Dipilih acak sekali per hari agar tidak berubah-ubah setiap kali halaman dirender.
+        return cache()->remember(
+            'customer-order-featured-' . now()->format('Ymd'),
+            now()->endOfDay(),
+            function () {
+                $promoProductIds = Promo::query()
+                    ->active()
+                    ->with('products')
+                    ->get()
+                    ->flatMap(fn ($promo) => $promo->products->pluck('id'))
+                    ->unique();
+
+                $bestSellerIds = SaleItem::query()
+                    ->selectRaw('product_id, SUM(quantity) as total_qty')
+                    ->groupBy('product_id')
+                    ->orderByDesc('total_qty')
+                    ->limit(10)
+                    ->pluck('product_id');
+
+                return Product::query()
+                    ->with(['unit', 'prices'])
+                    ->where('is_active', true)
+                    ->where(function ($query) use ($promoProductIds, $bestSellerIds): void {
+                        $query->whereIn('id', $promoProductIds)
+                            ->orWhereIn('id', $bestSellerIds);
+                    })
+                    ->inRandomOrder()
+                    ->limit(3)
+                    ->get();
+            }
+        );
+    }
+
+    private function promoProductCount(): int
+    {
+        return cache()->remember(
+            'customer-order-promo-count-' . now()->format('Ymd'),
+            now()->endOfDay(),
+            fn () => Product::query()
+                ->where('is_active', true)
+                ->whereHas('promos', fn ($query) => $query->active())
+                ->count()
+        );
     }
 
     public function addToCart(int $productId): void
@@ -330,6 +470,66 @@ class CustomerOrderCreate extends Component
     public function estimatedTotal(): float
     {
         return collect($this->cart)->sum('subtotal');
+    }
+
+    public function totalQuantity(): int
+    {
+        return (int) collect($this->cart)->sum('quantity');
+    }
+
+    public function meetsMinimumOrder(): bool
+    {
+        if ($this->minOrderTotal > 0 && $this->estimatedTotal() < $this->minOrderTotal) {
+            return false;
+        }
+
+        if ($this->minOrderQty > 0 && $this->totalQuantity() < $this->minOrderQty) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function promoByProduct($products): array
+    {
+        $activePromos = Promo::query()->active()->with('products')->get();
+
+        if ($activePromos->isEmpty()) {
+            return [];
+        }
+
+        $map = [];
+
+        foreach ($products as $product) {
+            $basePrice = $product->getBasePriceForQuantity(1);
+            $bestPromo = null;
+            $bestPrice = $basePrice;
+
+            foreach ($activePromos as $promo) {
+                if (! $promo->products->contains('id', $product->id)) {
+                    continue;
+                }
+
+                $price = $promo->applyToPrice($basePrice);
+
+                if ($price < $bestPrice) {
+                    $bestPrice = $price;
+                    $bestPromo = $promo;
+                }
+            }
+
+            if ($bestPromo) {
+                $floor = Product::promoPriceFloor((float) $product->average_cost);
+
+                $map[$product->id] = [
+                    'promo' => $bestPromo,
+                    'original_price' => $basePrice,
+                    'discounted_price' => min(max($bestPrice, $floor), $basePrice),
+                ];
+            }
+        }
+
+        return $map;
     }
 
     private function refreshCartItemPrice(int $productId): void

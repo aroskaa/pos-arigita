@@ -66,27 +66,36 @@ class ReportDownloadController extends Controller
             ->where('status', 'completed')
             ->whereBetween('sale_date', [$startDate, $endDate]);
 
+        $completedItems = SaleItem::query()
+            ->whereHas('sale', fn (Builder $query) => $query
+                ->where('status', 'completed')
+                ->whereBetween('sale_date', [$startDate, $endDate]));
+
         $grossSales = (float) (clone $sales)->sum('subtotal');
         $discountTotal = (float) (clone $sales)->sum('discount_total');
         $netSales = (float) (clone $sales)->sum('grand_total');
-        $costTotal = (float) SaleItem::query()
-            ->whereHas('sale', fn (Builder $query) => $query
-                ->where('status', 'completed')
-                ->whereBetween('sale_date', [$startDate, $endDate]))
+
+        $costTotal = (float) (clone $completedItems)
             ->selectRaw('COALESCE(SUM(quantity * cost_price), 0) as total_cost')
             ->value('total_cost');
+
+        // Potongan otomatis dari promo & harga grosir tier (harga normal vs harga jual).
+        $tierSavingsTotal = (float) (clone $completedItems)
+            ->selectRaw('COALESCE(SUM(GREATEST(COALESCE(base_price, unit_price) - unit_price, 0) * quantity), 0) as total_savings')
+            ->value('total_savings');
 
         return [
             'title' => 'Laporan Keuangan',
             'summary' => [
                 'Penjualan Kotor' => $grossSales,
-                'Total Diskon' => $discountTotal,
+                'Diskon Kasir (Manual)' => $discountTotal,
+                'Potongan Promo/Grosir' => $tierSavingsTotal,
                 'Penjualan Bersih' => $netSales,
                 'Harga Pokok Penjualan' => $costTotal,
                 'Laba Kotor' => $netSales - $costTotal,
             ],
             'rows' => (clone $sales)
-                ->with(['customer', 'cashier'])
+                ->with(['customer', 'cashier', 'items'])
                 ->latest('sale_date')
                 ->get(),
         ];
