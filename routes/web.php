@@ -30,6 +30,10 @@
             Route::get('/users', function () {
                 return view('pages.users.index');
             })->name('users.index');
+
+            Route::get('/settings/business', function () {
+                return view('pages.settings.business');
+            })->name('settings.business');
         });
 
         Route::middleware('role:owner,admin')->group(function () {

@@ -30,18 +30,8 @@ class PromoIndex extends Component
     public array $productIds = [];
     public string $productSearch = '';
 
-    public int|string|null $minOrderTotal = 0;
-    public int|string|null $minOrderQty = 0;
-
-    public int|string|null $minMarginRp = 500;
-    public int|string|null $minMarginPct = 2;
-
     public function mount(): void
     {
-        $this->minOrderTotal = (int) Setting::get('min_order_total', 0);
-        $this->minOrderQty = (int) Setting::get('min_order_qty', 0);
-        $this->minMarginRp = (int) Setting::get('min_margin_rp', 500);
-        $this->minMarginPct = (float) Setting::get('min_margin_pct', 2);
     }
 
     protected function rules(): array
@@ -233,48 +223,7 @@ class PromoIndex extends Component
         Session::flash('success', 'Promo berhasil dihapus.');
     }
 
-    public function saveSettings(): void
-    {
-        $this->validate([
-            'minOrderTotal' => ['required', 'integer', 'min:0'],
-            'minOrderQty' => ['required', 'integer', 'min:0'],
-            'minMarginRp' => ['required', 'integer', 'min:0'],
-            'minMarginPct' => ['required', 'numeric', 'min:0', 'max:100'],
-        ], [
-            'minOrderTotal.required' => 'Minimal total order wajib diisi.',
-            'minOrderTotal.integer' => 'Minimal total order harus berupa angka.',
-            'minOrderTotal.min' => 'Minimal total order tidak boleh negatif.',
-            'minOrderQty.required' => 'Minimal jumlah unit wajib diisi.',
-            'minOrderQty.integer' => 'Minimal jumlah unit harus berupa angka.',
-            'minOrderQty.min' => 'Minimal jumlah unit tidak boleh negatif.',
-            'minMarginRp.required' => 'Margin minimum rupiah wajib diisi.',
-            'minMarginRp.integer' => 'Margin minimum rupiah harus berupa angka.',
-            'minMarginRp.min' => 'Margin minimum rupiah tidak boleh negatif.',
-            'minMarginPct.required' => 'Margin minimum persen wajib diisi.',
-            'minMarginPct.numeric' => 'Margin minimum persen harus berupa angka.',
-            'minMarginPct.min' => 'Margin minimum persen tidak boleh negatif.',
-            'minMarginPct.max' => 'Margin minimum persen tidak boleh lebih dari 100.',
-        ]);
 
-        Setting::set('min_order_total', (int) $this->minOrderTotal);
-        Setting::set('min_order_qty', (int) $this->minOrderQty);
-        Setting::set('min_margin_rp', (int) $this->minMarginRp);
-        Setting::set('min_margin_pct', (float) $this->minMarginPct);
-
-        ActivityLogger::log(
-            'settings.updated',
-            'Pengaturan minimum order & margin diperbarui.',
-            null,
-            [
-                'min_order_total' => (int) $this->minOrderTotal,
-                'min_order_qty' => (int) $this->minOrderQty,
-                'min_margin_rp' => (int) $this->minMarginRp,
-                'min_margin_pct' => (float) $this->minMarginPct,
-            ],
-        );
-
-        Session::flash('success', 'Pengaturan berhasil disimpan.');
-    }
 
     private function resetForm(): void
     {

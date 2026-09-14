@@ -1,7 +1,22 @@
 @php
-    $paperSize = $paperSize ?? request('paper', request('size', '58'));
-    $paperSize = in_array((string) $paperSize, ['58', '80'], true) ? (string) $paperSize : '58';
+    $defaultPaper = \App\Models\Setting::get('receipt_default_paper', '58');
+    $paperSize = $paperSize ?? request('paper', request('size', $defaultPaper));
+    $paperSize = in_array((string) $paperSize, ['58', '80'], true) ? (string) $paperSize : $defaultPaper;
     $is58 = ($paperSize === '58');
+
+    $companyName = \App\Models\Setting::get('company_name', 'CV Ari Gita Grosir');
+    $companyTagline = \App\Models\Setting::get('company_tagline', 'Grosir Minuman');
+    $companyPhone = \App\Models\Setting::get('company_phone', '');
+    $companyAddress = \App\Models\Setting::get('company_address', '');
+    $receiptTitle = \App\Models\Setting::get('receipt_header_title', 'Struk Transaksi Penjualan');
+    $showLogo = (bool) \App\Models\Setting::get('receipt_show_logo', true);
+    $showAddress = (bool) \App\Models\Setting::get('receipt_show_address', true);
+    $showPhone = (bool) \App\Models\Setting::get('receipt_show_phone', true);
+    $showCashier = (bool) \App\Models\Setting::get('receipt_show_cashier', true);
+    $showCustomer = (bool) \App\Models\Setting::get('receipt_show_customer', true);
+    $showTimestamp = (bool) \App\Models\Setting::get('receipt_show_timestamp', true);
+    $footerThanks = \App\Models\Setting::get('receipt_footer_thanks', 'Terima kasih atas pembelian Anda.');
+    $footerNotice = \App\Models\Setting::get('receipt_footer_notice', 'Barang yang sudah dibeli harap diperiksa kembali.');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -317,13 +332,23 @@
         <div class="receipt-wrapper">
             <div class="receipt">
                 <div class="center">
-                    <img src="{{ asset('images/logo-ag.png') }}" alt="Logo" style="width: 32px; height: auto; margin-bottom: 2px; display: inline-block;">
-                    <div class="store-name">CV Ari Gita Grosir</div>
+                    @if ($showLogo)
+                        <img src="{{ asset('images/logo-ag.png') }}" alt="Logo" style="width: 32px; height: auto; margin-bottom: 2px; display: inline-block;">
+                    @endif
+                    <div class="store-name">{{ $companyName }}</div>
                     @if (request()->boolean('is_copy'))
                         <div class="store-subtitle bold" style="font-weight: 700; font-size: {{ $is58 ? '9px' : '10.5px' }}; margin-top: 2px;">[ STRUK COPY ]</div>
                     @endif
-                    <div class="store-subtitle">Grosir Minuman</div>
-                    <div class="store-subtitle">Struk Transaksi Penjualan</div>
+                    @if ($companyTagline)
+                        <div class="store-subtitle">{{ $companyTagline }}</div>
+                    @endif
+                    <div class="store-subtitle">{{ $receiptTitle }}</div>
+                    @if ($showAddress && $companyAddress)
+                        <div class="store-subtitle" style="font-size: {{ $is58 ? '8px' : '9.5px' }};">{{ $companyAddress }}</div>
+                    @endif
+                    @if ($showPhone && $companyPhone)
+                        <div class="store-subtitle" style="font-size: {{ $is58 ? '8px' : '9.5px' }};">Telp: {{ $companyPhone }}</div>
+                    @endif
                 </div>
 
                 <div class="divider"></div>
@@ -345,15 +370,19 @@
                     <div class="meta-value">: {{ $sale->sale_date->format('d/m/Y H:i') }}</div>
                 </div>
 
-                <div class="meta-row">
-                    <div class="meta-label">Kasir</div>
-                    <div class="meta-value">: {{ $sale->cashier?->name ?? '-' }}</div>
-                </div>
+                @if ($showCashier)
+                    <div class="meta-row">
+                        <div class="meta-label">Kasir</div>
+                        <div class="meta-value">: {{ $sale->cashier?->name ?? '-' }}</div>
+                    </div>
+                @endif
 
-                <div class="meta-row">
-                    <div class="meta-label">Customer</div>
-                    <div class="meta-value">: {{ $sale->customer?->name ?? 'Walk-in Customer' }}</div>
-                </div>
+                @if ($showCustomer)
+                    <div class="meta-row">
+                        <div class="meta-label">Customer</div>
+                        <div class="meta-value">: {{ $sale->customer?->name ?? 'Walk-in Customer' }}</div>
+                    </div>
+                @endif
 
                 <div class="divider"></div>
 
@@ -443,11 +472,17 @@
                 <div class="divider"></div>
 
                 <div class="footer">
-                    Terima kasih atas pembelian Anda.
-                    <br>
-                    Barang yang sudah dibeli harap diperiksa kembali.
-                    <br>
-                    {{ now()->format('d/m/Y H:i:s') }}
+                    @if ($footerThanks)
+                        {{ $footerThanks }}
+                        <br>
+                    @endif
+                    @if ($footerNotice)
+                        {{ $footerNotice }}
+                        <br>
+                    @endif
+                    @if ($showTimestamp)
+                        {{ now()->format('d/m/Y H:i:s') }}
+                    @endif
                 </div>
             </div>
 

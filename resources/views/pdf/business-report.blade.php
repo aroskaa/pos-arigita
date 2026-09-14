@@ -24,8 +24,8 @@
 </head>
 <body>
     <div class="header">
-        <div class="company">CV Ari Gita Grosir</div>
-        <div>Grosir Minuman</div>
+        <div class="company">{{ \App\Models\Setting::get('company_name', 'CV Ari Gita Grosir') }}</div>
+        <div>{{ \App\Models\Setting::get('company_tagline', 'Grosir Minuman') }}</div>
         <div class="title">{{ $title }}</div>
         <table class="meta">
             <tr>

@@ -154,6 +154,13 @@
                             </a>
 
                             @if(auth()->user()->isOwner())
+                                <a href="{{ route('settings.business') }}"
+                                class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+                                        {{ request()->routeIs('settings.business') ? 'bg-blue-50 text-blue-700 font-bold border border-blue-100' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+                                    <span>⚙️</span>
+                                    <span>Pengaturan Bisnis</span>
+                                </a>
+
                                 <a href="{{ route('users.index') }}"
                                 class="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition
                                         {{ request()->routeIs('users.*') ? 'bg-blue-50 text-blue-700 font-bold border border-blue-100' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
